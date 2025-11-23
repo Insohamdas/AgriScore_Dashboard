@@ -1,0 +1,7 @@
+{
+  "name": "AgriScore",
+  "description": "A comprehensive smart agriculture dashboard for monitoring farms, fields, IoT devices, and sensor data based on the provided ERD.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
