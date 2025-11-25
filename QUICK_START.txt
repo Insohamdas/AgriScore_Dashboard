@@ -1,0 +1,49 @@
+╔══════════════════════════════════════════════════════════════╗
+║          AgriScore Dashboard - Quick Start Guide            ║
+╚══════════════════════════════════════════════════════════════╝
+
+🚀 SERVER IS RUNNING!
+   URL: http://localhost:3001/
+
+📋 TO FIX THE CHATBOT:
+
+1. Get Gemini API Key:
+   → Visit: https://aistudio.google.com/app/apikey
+   → Create a new API key (free tier available)
+
+2. Update .env file:
+   → Open: .env
+   → Change: VITE_GEMINI_API_KEY=your-api-key-here
+   → To: VITE_GEMINI_API_KEY=AIzaSy...your-actual-key
+
+3. Restart server:
+   → Press Ctrl+C to stop
+   → Run: npm run dev
+
+4. Test it:
+   → Open app → Go to "Help & Support"
+   → Switch between Text/Voice modes
+   → Ask agricultural questions
+
+⚠️  IMPORTANT NOTES:
+   • The chatbot WILL NOT work without a valid API key
+   • You'll see "API Key missing" error in console
+   • Voice mode requires microphone permissions
+   • Text mode works with basic Gemini API key
+   • Voice mode may need additional API permissions
+
+✅ WHAT'S WORKING NOW:
+   • Dashboard with analytics
+   • Weather integration
+   • Soil & Water monitoring
+   • Task management
+   • All navigation and UI
+
+❌ WHAT NEEDS API KEY:
+   • Text chatbot in Help & Support
+   • Voice chatbot in Help & Support
+
+📖 For detailed instructions, see:
+   → CHATBOT_SETUP.md
+   → README.md
+

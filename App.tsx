@@ -194,13 +194,8 @@ const Layout: React.FC<{ children: React.ReactNode; onLogout: () => void }> = ({
         ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* Logo */}
-        <div className="h-20 flex items-center px-8">
-          <div className="flex items-center gap-3">
-            <div className="bg-green-500 p-1.5 rounded-lg">
-              <Sprout className="w-5 h-5 text-white" strokeWidth={2.5} />
-            </div>
-            <span className="text-xl font-bold text-slate-900 tracking-tight">AgriScore</span>
-          </div>
+        <div className="h-32 flex items-center justify-center w-full">
+            <img src="/logo.svg" alt="AgriScore Logo" className="w-24 h-24" />
         </div>
 
         {/* Nav */}
@@ -296,7 +291,7 @@ const LoginPage = ({ onLogin }: { onLogin: () => void }) => {
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
           <div className="relative z-10 text-white max-w-lg px-12">
             <div className="bg-green-500/20 backdrop-blur-md w-16 h-16 rounded-2xl flex items-center justify-center mb-8 border border-green-500/30">
-               <Sprout className="w-8 h-8 text-green-400" strokeWidth={2.5} />
+               <img src="/logo.svg" alt="AgriScore Logo" className="w-10 h-10" />
             </div>
             <h1 className="text-5xl font-bold mb-6 leading-tight">Smart Farming for a <span className="text-green-400">Better Future</span></h1>
             <p className="text-xl text-slate-200 leading-relaxed font-light">Monitor, Analyze, and Optimize your farm operations with real-time data insights and intelligent crop management.</p>
@@ -1525,7 +1520,7 @@ const HelpSupport = () => {
     
     // Text Chat State
     const [messages, setMessages] = useState<{role: 'user' | 'model', text: string}[]>([
-        { role: 'model', text: 'Hello! I am your AgriSmart Assistant. Ask me anything about your farm, crop health, or weather conditions.' }
+        { role: 'model', text: 'Hello! I am your AgriScore Assistant. Ask me anything about your farm, crop health, or weather conditions.' }
     ]);
     const [input, setInput] = useState('');
     const [isTextLoading, setIsTextLoading] = useState(false);
@@ -1564,20 +1559,39 @@ const HelpSupport = () => {
         setIsTextLoading(true);
 
         try {
-            if (!process.env.API_KEY) throw new Error("API Key missing");
-            
-            if (!textChatSession.current) {
-                const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-                textChatSession.current = ai.chats.create({
-                    model: "gemini-3-pro-preview",
-                    config: { systemInstruction: "You are an expert agricultural assistant." }
-                });
+            const apiKey = process.env.API_KEY;
+            if (!apiKey || apiKey === 'your-api-key-here') {
+                throw new Error("API Key missing or invalid");
             }
-            const result = await textChatSession.current.sendMessage({ message: userMsg });
-            setMessages(prev => [...prev, { role: 'model', text: result.text || "No response" }]);
-        } catch (error) {
+            
+            const ai = new GoogleGenAI({ apiKey });
+            
+            // Build conversation history
+            const contents = messages
+                .filter(m => m.role === 'user' || m.role === 'model')
+                .map(m => ({
+                    role: m.role === 'user' ? 'user' : 'model',
+                    parts: [{ text: m.text }]
+                }));
+            
+            // Add current message
+            contents.push({
+                role: 'user',
+                parts: [{ text: userMsg }]
+            });
+            
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: contents,
+                systemInstruction: 'You are an expert agricultural assistant helping farmers with crop management, soil health, weather patterns, and farm operations. Provide practical, actionable advice.'
+            });
+            
+            const text = response.text || "No response received";
+            setMessages(prev => [...prev, { role: 'model', text }]);
+        } catch (error: any) {
             console.error("Text chat error:", error);
-            setMessages(prev => [...prev, { role: 'model', text: "Error connecting to AI." }]);
+            const errorMsg = error.message || "Error connecting to AI.";
+            setMessages(prev => [...prev, { role: 'model', text: `Error: ${errorMsg}` }]);
         } finally {
             setIsTextLoading(false);
         }
@@ -1727,7 +1741,7 @@ const HelpSupport = () => {
                             {mode === 'voice' ? <AudioWaveform className="w-5 h-5" /> : <SparklesIcon className="w-5 h-5" />}
                         </div>
                         <div>
-                            <h3 className="font-bold text-slate-800 text-sm">AgriSmart Assistant</h3>
+                            <h3 className="font-bold text-slate-800 text-sm">AgriScore Assistant</h3>
                             <p className="text-xs text-slate-500 flex items-center gap-1">
                                 <span className={`w-1.5 h-1.5 rounded-full ${isLiveConnected ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`}></span> 
                                 {mode === 'voice' ? 'Voice Mode' : 'Text Mode'}
@@ -1818,7 +1832,7 @@ const HelpSupport = () => {
                              </h2>
                              <p className="text-slate-500 text-sm max-w-xs mx-auto mb-8">
                                  {isLiveConnected 
-                                    ? "Speak naturally. AgriSmart AI is listening to your questions." 
+                                    ? "Speak naturally. AgriScore AI is listening to your questions." 
                                     : "Connect to have a real-time, hands-free conversation about your farm."}
                              </p>
 
