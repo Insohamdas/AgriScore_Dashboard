@@ -6,279 +6,224 @@ import {
   Thermometer, Activity, Battery, Wifi, WifiOff, MapPin, ChevronRight,
   Wind, AlertTriangle, FileText, Stethoscope, BarChart2, HelpCircle, LogOut,
   Search, Download, Sun, Cloud, ArrowDown, ArrowUp, Carrot, MoreHorizontal, Calendar,
-  User as UserIcon, Shield, Globe, Lock, Mail, Smartphone, Camera, Save, ToggleLeft, ToggleRight,
+   User as UserIcon, Shield, Globe, Lock, Mail, Smartphone, Camera, Save, ToggleLeft, ToggleRight,
   CheckCircle, Clock, Filter, Plus, Trash2, Droplet, CloudRain, Zap, Image as ImageIcon,
   ChevronDown, MessageSquare, Phone, FlaskConical, Layers, Diamond, Award,
-  CreditCard, Users, Link as LinkIcon, Key, History, BadgeCheck, AlertCircle, FileCheck,
-  Facebook, IndianRupee, Send, Sunrise, Sunset, Eye, Gauge, Navigation, Umbrella, MoveRight,
-  BookOpen, Bug, LifeBuoy, Mic, MicOff, Square, Volume2, AudioWaveform
+   CreditCard, Users, Link as LinkIcon, Key, History, BadgeCheck, AlertCircle, FileCheck,
+   Facebook, IndianRupee, Sunrise, Sunset, Eye, Gauge, Navigation, Umbrella, MoveRight,
+   BookOpen, Bug, LifeBuoy, Upload
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
-import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { api } from './services/mockDataService';
 import { Farm, Field, Device, Sensor, Reading, Alert, IrrigationEvent, DeviceStatus, AlertSeverity, SensorType, Task, HarvestItem, User } from './types';
 
-// --- Audio Helpers for Live API ---
-
-function encode(bytes: Uint8Array) {
-  let binary = '';
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
-
-function decode(base64: string) {
-  const binaryString = atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
-}
-
-function createBlob(data: Float32Array) {
-  const l = data.length;
-  const int16 = new Int16Array(l);
-  for (let i = 0; i < l; i++) {
-    int16[i] = data[i] * 32768;
-  }
-  return {
-    data: encode(new Uint8Array(int16.buffer)),
-    mimeType: 'audio/pcm;rate=16000',
-  };
-}
-
-async function decodeAudioData(
-  data: Uint8Array,
-  ctx: AudioContext,
-  sampleRate: number,
-  numChannels: number,
-): Promise<AudioBuffer> {
-  const dataInt16 = new Int16Array(data.buffer);
-  const frameCount = dataInt16.length / numChannels;
-  const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
-
-  for (let channel = 0; channel < numChannels; channel++) {
-    const channelData = buffer.getChannelData(channel);
-    for (let i = 0; i < frameCount; i++) {
-      channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
-    }
-  }
-  return buffer;
-}
+const soilHistoryUrl = new URL('./IoT_soil_data.csv', import.meta.url).href;
 
 // --- Helper Components ---
 
 const StatusBadge = ({ status }: { status: string }) => {
-  const styles: Record<string, string> = {
-    'Pending': 'bg-amber-50 text-amber-600',
-    'In Progress': 'bg-blue-50 text-blue-600',
-    'Completed': 'bg-green-50 text-green-600',
-    'Online': 'bg-green-50 text-green-600',
-    'Offline': 'bg-red-50 text-red-600',
-    'Maintenance': 'bg-amber-100 text-amber-700',
-    'Scheduled': 'bg-purple-50 text-purple-600',
-    'Critical': 'bg-red-100 text-red-700',
-    'Warning': 'bg-orange-100 text-orange-700',
-    'Excellent': 'bg-green-50 text-green-600',
-    'Good': 'bg-blue-50 text-blue-600',
-    'Fair': 'bg-orange-50 text-orange-600',
-    'Poor': 'bg-red-50 text-red-600',
-    'Active': 'bg-green-100 text-green-700',
-    'Inactive': 'bg-slate-100 text-slate-500',
-  };
+   const styles: Record<string, string> = {
+      'Pending': 'bg-amber-50 text-amber-600',
+      'In Progress': 'bg-blue-50 text-blue-600',
+      'Completed': 'bg-green-50 text-green-600',
+      'Online': 'bg-green-50 text-green-600',
+      'Offline': 'bg-red-50 text-red-600',
+      'Maintenance': 'bg-amber-100 text-amber-700',
+      'Scheduled': 'bg-purple-50 text-purple-600',
+      'Critical': 'bg-red-100 text-red-700',
+      'Warning': 'bg-orange-100 text-orange-700',
+      'Excellent': 'bg-green-50 text-green-600',
+      'Good': 'bg-blue-50 text-blue-600',
+      'Fair': 'bg-orange-50 text-orange-600',
+      'Poor': 'bg-red-50 text-red-600',
+      'Active': 'bg-green-100 text-green-700',
+      'Inactive': 'bg-slate-100 text-slate-500',
+   };
   
-  return (
-    <span className={`px-3 py-1 rounded-full text-[11px] font-semibold tracking-wide ${styles[status] || 'bg-gray-50 text-gray-600'}`}>
-      {status}
-    </span>
-  );
+   return (
+      <span className={`px-3 py-1 rounded-full text-[11px] font-semibold tracking-wide ${styles[status] || 'bg-gray-50 text-gray-600'}`}>
+         {status}
+      </span>
+   );
 };
 
 const Toggle = ({ enabled, onChange }: { enabled: boolean; onChange: (val: boolean) => void }) => (
-  <button 
-    onClick={() => onChange(!enabled)}
-    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500/20 ${enabled ? 'bg-green-500' : 'bg-slate-200'}`}
-  >
-    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out ${enabled ? 'translate-x-6' : 'translate-x-1'}`} />
-  </button>
+   <button
+      onClick={() => onChange(!enabled)}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500/20 ${enabled ? 'bg-green-500' : 'bg-slate-300'}`}
+   >
+      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out ${enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+   </button>
 );
 
-const Card = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => (
-  <div className={`bg-white rounded-[24px] p-6 shadow-soft border border-slate-100/50 ${className}`}>
-    {children}
-  </div>
+const Card = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
+   <div className={`bg-white rounded-[24px] p-6 shadow-soft border border-slate-100/60 ${className}`}>
+      {children}
+   </div>
 );
 
-const SectionHeader = ({ title, subtitle, action }: { title: string, subtitle?: string, action?: React.ReactNode }) => (
-  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
-    <div>
-      <h1 className="text-[22px] font-bold text-slate-900">{title}</h1>
-      {subtitle && <p className="text-slate-500 text-sm mt-1 font-medium">{subtitle}</p>}
-    </div>
-    {action}
-  </div>
-);
-
-const MiniGauge = ({ value, max, color, track, size = 80, strokeWidth = 8, children }: any) => {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const normalizedValue = Math.min(Math.max(value, 0), max);
-  const offset = circumference - (normalizedValue / max) * circumference;
-
-  return (
-    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-      <svg className="w-full h-full transform -rotate-90">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          fill="transparent"
-          className={`${track} opacity-20`}
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-          fill="transparent"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          className={`${color} transition-all duration-1000 ease-out`}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-         {children}
+const SectionHeader = ({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) => (
+   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
+      <div>
+         <h1 className="text-[22px] font-bold text-slate-900">{title}</h1>
+         {subtitle && <p className="text-slate-500 text-sm mt-1 font-medium">{subtitle}</p>}
       </div>
-    </div>
-  );
-};
+      {action}
+   </div>
+);
 
-// --- Layout Component ---
+const MiniGauge = ({ value, max, color, track, size = 80, strokeWidth = 8, children }: { value: number; max: number; color: string; track: string; size?: number; strokeWidth?: number; children?: React.ReactNode }) => {
+   const radius = (size - strokeWidth) / 2;
+   const circumference = radius * 2 * Math.PI;
+   const normalizedValue = Math.min(Math.max(value, 0), max);
+   const offset = circumference - (normalizedValue / max) * circumference;
+
+   return (
+      <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+         <svg className="w-full h-full transform -rotate-90">
+            <circle
+               cx={size / 2}
+               cy={size / 2}
+               r={radius}
+               stroke="currentColor"
+               strokeWidth={strokeWidth}
+               fill="transparent"
+               className={`${track} opacity-20`}
+            />
+            <circle
+               cx={size / 2}
+               cy={size / 2}
+               r={radius}
+               stroke="currentColor"
+               strokeWidth={strokeWidth}
+               fill="transparent"
+               strokeDasharray={circumference}
+               strokeDashoffset={offset}
+               strokeLinecap="round"
+               className={`${color} transition-all duration-700 ease-out`}
+            />
+         </svg>
+         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            {children}
+         </div>
+      </div>
+   );
+};
 
 const Layout: React.FC<{ children: React.ReactNode; onLogout: () => void }> = ({ children, onLogout }) => {
-  const location = useLocation();
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+   const location = useLocation();
+   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  const navItems = [
-    { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/farms', icon: Sprout, label: 'Crop Management' },
-    { path: '/irrigation', icon: Droplets, label: 'Soil & Water' },
-    { path: '/weather', icon: Sun, label: 'Weather' },
-    { path: '/tasks', icon: FileText, label: 'Task Management' },
-    { path: '/doctor', icon: Stethoscope, label: 'Crop Doctor' },
-    { path: '/reports', icon: BarChart2, label: 'Reports & Analytics' },
-    { path: '/score', icon: Activity, label: 'AgriScore' },
-    { path: '/settings', icon: Settings, label: 'Settings' },
-    { path: '/account', icon: UserIcon, label: 'My Account' },
-    { path: '/help', icon: HelpCircle, label: 'Help & Support' },
-  ];
+   const navItems = [
+      { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+      { path: '/farms', icon: Sprout, label: 'Crop Management' },
+      { path: '/irrigation', icon: Droplets, label: 'Soil & Water' },
+      { path: '/weather', icon: Sun, label: 'Weather' },
+      { path: '/tasks', icon: FileText, label: 'Task Management' },
+      { path: '/doctor', icon: Stethoscope, label: 'Crop Doctor' },
+      { path: '/reports', icon: BarChart2, label: 'Reports & Analytics' },
+      { path: '/score', icon: Activity, label: 'AgriScore' },
+      { path: '/settings', icon: Settings, label: 'Settings' },
+      { path: '/account', icon: UserIcon, label: 'My Account' },
+      { path: '/help', icon: HelpCircle, label: 'Help & Support' },
+   ];
 
-  const isActive = (path: string) => {
-    if (path === '/' && location.pathname !== '/') return false;
-    return location.pathname.startsWith(path);
-  };
+   const isActive = (path: string) => {
+      if (path === '/' && location.pathname !== '/') return false;
+      return location.pathname.startsWith(path);
+   };
 
-  return (
-    <div className="flex h-screen bg-[#F8F9FC] font-sans text-slate-800 overflow-hidden">
-      {/* Sidebar */}
-      <aside className={`
-        fixed lg:static inset-y-0 left-0 z-50 w-[260px] bg-white border-r border-slate-100 transition-transform duration-200 ease-in-out flex flex-col
-        ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
-        {/* Logo */}
-        <div className="h-32 flex items-center justify-center w-full">
-            <img src="/logo.svg" alt="AgriScore Logo" className="w-24 h-24" />
-        </div>
-
-        {/* Nav */}
-        <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto custom-scrollbar">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => setIsMobileOpen(false)}
-              className={`
-                flex items-center px-4 py-3 rounded-xl transition-all duration-200 group text-[13px] font-medium
-                ${isActive(item.path) 
-                  ? 'bg-[#F1FDF4] text-green-600' 
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}
-              `}
-            >
-              <item.icon className={`w-[18px] h-[18px] mr-3.5 transition-colors ${isActive(item.path) ? 'text-green-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-
-        {/* Logout */}
-        <div className="p-4 mt-auto">
-           <button 
-             onClick={onLogout}
-             className="flex items-center w-full px-4 py-3 text-slate-500 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors text-[13px] font-medium group"
-           >
-              <LogOut className="w-[18px] h-[18px] mr-3.5 group-hover:text-red-500 transition-colors" />
-              Log Out
-           </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        {/* Header */}
-        <header className="h-20 bg-white/80 backdrop-blur-sm border-b border-slate-100 flex items-center justify-between px-8 z-20 sticky top-0">
-          <button onClick={() => setIsMobileOpen(true)} className="lg:hidden p-2 text-slate-500">
-            <Menu className="w-6 h-6" />
-          </button>
-          
-          {/* Search */}
-          <div className="hidden md:flex items-center max-w-lg w-full relative group">
-            <Search className="w-[18px] h-[18px] absolute left-4 text-slate-400 group-focus-within:text-green-500 transition-colors" />
-            <input 
-              type="text" 
-              placeholder="Search something here...." 
-              className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-transparent focus:border-green-200 focus:bg-white rounded-full text-sm text-slate-600 placeholder:text-slate-400 focus:ring-4 focus:ring-green-500/10 transition-all outline-none"
-            />
-          </div>
-
-          {/* Right Actions */}
-          <div className="flex items-center space-x-5">
-            <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors hover:bg-slate-50 rounded-full">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
-            </button>
-            
-            <div className="flex items-center pl-2">
-              <div className="w-9 h-9 rounded-full bg-orange-400 flex items-center justify-center text-white font-bold text-xs shadow-sm ring-2 ring-white">
-                MK
-              </div>
-              <div className="ml-3 hidden md:block">
-                <p className="text-sm font-semibold text-slate-900 leading-tight">Manish Kumar</p>
-                <p className="text-[11px] text-slate-400">kmanish45@gmail.com</p>
-              </div>
+   return (
+      <div className="flex h-screen bg-[#F8F9FC] font-sans text-slate-800 overflow-hidden">
+         <aside
+            className={`fixed lg:static inset-y-0 left-0 z-50 w-[260px] bg-white border-r border-slate-100 transition-transform duration-200 ease-in-out flex flex-col ${
+               isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+            }`}
+         >
+            <div className="h-20 flex items-center justify-between px-4 border-b border-slate-100 lg:hidden">
+               <img src="/logo.svg" alt="AgriScore Logo" className="w-10 h-10" />
+               <button onClick={() => setIsMobileOpen(false)} className="p-2 text-slate-500">
+                  <X className="w-6 h-6" />
+               </button>
             </div>
-          </div>
-        </header>
+            <div className="hidden lg:flex h-32 items-center justify-center w-full">
+               <img src="/logo.svg" alt="AgriScore Logo" className="w-24 h-24" />
+            </div>
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth bg-[#F8F9FC]">
-          <div className="max-w-7xl mx-auto pb-10">
-            {children}
-          </div>
-        </div>
-      </main>
-    </div>
-  );
+            <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto custom-scrollbar">
+               {navItems.map((item) => (
+                  <Link
+                     key={item.path}
+                     to={item.path}
+                     onClick={() => setIsMobileOpen(false)}
+                     className={`flex items-center px-4 py-3 rounded-xl transition-all text-[13px] font-medium ${
+                        isActive(item.path)
+                           ? 'bg-[#F1FDF4] text-green-600 shadow-sm'
+                           : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                     }`}
+                  >
+                     <item.icon
+                        className={`w-[18px] h-[18px] mr-3.5 transition-colors ${
+                           isActive(item.path) ? 'text-green-600' : 'text-slate-400 group-hover:text-slate-600'
+                        }`}
+                     />
+                     <span>{item.label}</span>
+                  </Link>
+               ))}
+            </nav>
+
+            <div className="p-4 mt-auto">
+               <button
+                  onClick={onLogout}
+                  className="flex items-center w-full px-4 py-3 text-slate-500 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors text-[13px] font-medium"
+               >
+                  <LogOut className="w-[18px] h-[18px] mr-3.5" />
+                  Log Out
+               </button>
+            </div>
+         </aside>
+
+         <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+            <header className="h-20 bg-white/80 backdrop-blur-sm border-b border-slate-100 flex items-center justify-between px-6 lg:px-10 z-20 sticky top-0">
+               <button onClick={() => setIsMobileOpen(true)} className="lg:hidden p-2 text-slate-500">
+                  <Menu className="w-6 h-6" />
+               </button>
+
+               <div className="hidden md:flex items-center max-w-lg w-full relative group">
+                  <Search className="w-[18px] h-[18px] absolute left-4 text-slate-400 group-focus-within:text-green-500 transition-colors" />
+                  <input
+                     type="text"
+                     placeholder="Search something here...."
+                     className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-transparent focus:border-green-200 focus:bg-white rounded-full text-sm text-slate-600 placeholder:text-slate-400 focus:ring-4 focus:ring-green-500/10 transition-all outline-none"
+                  />
+               </div>
+
+               <div className="flex items-center space-x-5">
+                  <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors hover:bg-slate-50 rounded-full">
+                     <Bell className="w-5 h-5" />
+                     <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+                  </button>
+
+                  <div className="flex items-center pl-2">
+                     <div className="w-9 h-9 rounded-full bg-orange-400 flex items-center justify-center text-white font-bold text-xs shadow-sm ring-2 ring-white">
+                        MK
+                     </div>
+                     <div className="ml-3 hidden md:block">
+                        <p className="text-sm font-semibold text-slate-900 leading-tight">Manish Kumar</p>
+                        <p className="text-[11px] text-slate-400">kmanish45@gmail.com</p>
+                     </div>
+                  </div>
+               </div>
+            </header>
+
+            <div className="flex-1 overflow-y-auto p-6 lg:p-8 bg-[#F8F9FC]">
+               <div className="max-w-7xl mx-auto pb-10">{children}</div>
+            </div>
+         </main>
+      </div>
+   );
 };
-
-// --- Authentication Component ---
 
 const LoginPage = ({ onLogin }: { onLogin: () => void }) => {
   const [method, setMethod] = useState<'email' | 'phone'>('email');
@@ -387,11 +332,59 @@ const LoginPage = ({ onLogin }: { onLogin: () => void }) => {
 const Dashboard = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [harvest, setHarvest] = useState<HarvestItem[]>([]);
+   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+   const exportMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     api.getTasks().then(setTasks);
     api.getHarvestSummary().then(setHarvest);
   }, []);
+
+   useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+         if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+            setIsExportMenuOpen(false);
+         }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+   }, []);
+
+   const handleExport = (type: 'live' | 'history') => {
+      if (type === 'history') {
+         const link = document.createElement('a');
+         link.href = soilHistoryUrl;
+         link.download = 'IoT_soil_data.csv';
+         document.body.appendChild(link);
+         link.click();
+         document.body.removeChild(link);
+         setIsExportMenuOpen(false);
+         return;
+      }
+
+      const headers = ['Category', 'Metric', 'Value', 'Unit', 'Notes'];
+      const productionRows = productionData.map((crop) => ['Production Mix', crop.name, crop.value, '%', 'Relative share']);
+      const harvestRows = harvest.map((item) => ['Harvest', item.crop, item.yield, item.unit, `Quality: ${item.quality}`]);
+      const taskRows = tasks.map((task) => ['Task', task.title, task.status, '-', `Due ${task.dueDate}`]);
+      const yieldRows = yieldData.map((point) => ['Yield Trend', point.name, point.value, 'tons', 'Monthly yield']);
+
+      const rows = [...productionRows, ...harvestRows, ...taskRows, ...yieldRows];
+      const csvContent =
+         'data:text/csv;charset=utf-8,' +
+         headers.join(',') +
+         '\n' +
+         rows.map((row) => row.join(',')).join('\n');
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', 'agriscore_dashboard_live_snapshot.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setIsExportMenuOpen(false);
+   };
 
   // Production Data for Gauge
   const productionData = [
@@ -429,9 +422,30 @@ const Dashboard = () => {
               </select>
               <ArrowDown className="w-3 h-3 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
-            <button className="bg-[#22C55E] hover:bg-green-600 text-white px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center transition-all shadow-sm shadow-green-200">
-              Export <Download className="w-3.5 h-3.5 ml-2" strokeWidth={2.5} />
-            </button>
+                  <div className="relative" ref={exportMenuRef}>
+                     <button
+                        onClick={() => setIsExportMenuOpen((prev) => !prev)}
+                        className="bg-[#22C55E] hover:bg-green-600 text-white px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center transition-all shadow-sm shadow-green-200"
+                     >
+                        Export <Download className="w-3.5 h-3.5 ml-2" strokeWidth={2.5} />
+                     </button>
+                     {isExportMenuOpen && (
+                        <div className="absolute right-0 mt-2 w-44 bg-white border border-slate-100 rounded-xl shadow-lg z-20 overflow-hidden">
+                           <button
+                              onClick={() => handleExport('live')}
+                              className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center justify-between"
+                           >
+                              Live data <span className="text-[11px] text-slate-400">Snapshot</span>
+                           </button>
+                           <button
+                              onClick={() => handleExport('history')}
+                              className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center justify-between border-t border-slate-100"
+                           >
+                              Full history <span className="text-[11px] text-slate-400">ZIP export</span>
+                           </button>
+                        </div>
+                     )}
+                  </div>
           </div>
         }
       />
@@ -751,6 +765,881 @@ const Dashboard = () => {
       </div>
     </div>
   );
+};
+
+const CropManagement = () => {
+   const cropStats = [
+      { label: 'Active Crops', value: 8, subtext: '4 at harvest stage', icon: Sprout, color: 'bg-green-100 text-green-700' },
+      { label: 'Avg Yield', value: '4.3 t/acre', subtext: '+6% vs last season', icon: BarChart2, color: 'bg-amber-100 text-amber-700' },
+      { label: 'Irrigation Status', value: '82%', subtext: 'All pivots synced', icon: Droplets, color: 'bg-blue-100 text-blue-700' },
+      { label: 'Pest Alerts', value: 2, subtext: 'Both medium severity', icon: AlertTriangle, color: 'bg-red-100 text-red-600' },
+   ];
+
+   const fields = [
+      { name: 'North Plot', crop: 'Wheat', stage: 'Flowering', health: 91, irrigation: 'Drip • 06:00', tasks: 2 },
+      { name: 'East Ridge', crop: 'Potato', stage: 'Vegetative', health: 78, irrigation: 'Pivot • 07:30', tasks: 3 },
+      { name: 'River Bend', crop: 'Rice', stage: 'Tillering', health: 84, irrigation: 'Flood • 18:00', tasks: 1 },
+      { name: 'South Orchard', crop: 'Mustard', stage: 'Sowing', health: 73, irrigation: 'Sprinkler • 21:00', tasks: 4 },
+   ];
+
+   const rotationPlan = [
+      { field: 'North Plot', current: 'Wheat', next: 'Legume Mix', window: 'Apr 5 - Apr 20' },
+      { field: 'East Ridge', current: 'Potato', next: 'Maize', window: 'Jun 10 - Jun 25' },
+      { field: 'River Bend', current: 'Rice', next: 'Sesbania Cover', window: 'Aug 1 - Aug 12' },
+   ];
+
+   const upcomingActivities = [
+      { title: 'Foliar spray (Zn + B)', field: 'North Plot', due: 'Tomorrow • 6 AM', owner: 'Ajay', status: 'Scheduled' },
+      { title: 'Scouting for aphids', field: 'South Orchard', due: 'Thu • 4 PM', owner: 'Rina', status: 'Pending' },
+      { title: 'Soil moisture audit', field: 'East Ridge', due: 'Fri • 7 AM', owner: 'Dev', status: 'In Progress' },
+   ];
+
+   const yieldTrend = [
+      { week: 'W1', planned: 3.2, actual: 3.1 },
+      { week: 'W2', planned: 3.4, actual: 3.35 },
+      { week: 'W3', planned: 3.6, actual: 3.45 },
+      { week: 'W4', planned: 3.8, actual: 3.7 },
+      { week: 'W5', planned: 4.0, actual: 3.95 },
+      { week: 'W6', planned: 4.2, actual: 4.15 },
+   ];
+
+   return (
+      <div className="space-y-8">
+         <SectionHeader
+            title="Crop Management"
+            subtitle="Track crop health, plan rotations, and coordinate field work"
+            action={
+               <button className="flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-green-200">
+                  <Plus className="w-4 h-4 mr-2" /> Add Field Plan
+               </button>
+            }
+         />
+
+         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {cropStats.map((stat, idx) => {
+               const Icon = stat.icon;
+               return (
+                  <Card key={idx} className="flex flex-col gap-3">
+                     <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold uppercase text-slate-400">{stat.label}</p>
+                        <span className={`p-2 rounded-xl ${stat.color}`}>
+                           <Icon className="w-4 h-4" />
+                        </span>
+                     </div>
+                     <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
+                     <p className="text-sm text-slate-500">{stat.subtext}</p>
+                  </Card>
+               );
+            })}
+         </div>
+
+         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <Card className="xl:col-span-2">
+               <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-slate-800">Yield vs Plan</h3>
+                  <span className="text-xs font-semibold text-slate-400">Last 6 weeks</span>
+               </div>
+               <ResponsiveContainer width="100%" height={260}>
+                  <AreaChart data={yieldTrend} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                     <defs>
+                        <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
+                           <stop offset="5%" stopColor="#22c55e" stopOpacity={0.25} />
+                           <stop offset="85%" stopColor="#22c55e" stopOpacity={0} />
+                        </linearGradient>
+                     </defs>
+                     <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                     <XAxis dataKey="week" stroke="#94A3B8" fontSize={12} />
+                     <YAxis stroke="#94A3B8" fontSize={12} unit=" t" />
+                     <Tooltip contentStyle={{ borderRadius: 16, borderColor: '#E2E8F0' }} />
+                     <Area type="monotone" dataKey="planned" stroke="#F97316" strokeWidth={2} fill="none" />
+                     <Area type="monotone" dataKey="actual" stroke="#22C55E" strokeWidth={2.5} fill="url(#colorActual)" />
+                  </AreaChart>
+               </ResponsiveContainer>
+            </Card>
+
+            <Card>
+               <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-slate-800">Rotation Plan</h3>
+                  <span className="text-xs font-semibold text-green-600">Soil recovery</span>
+               </div>
+               <div className="space-y-4">
+                  {rotationPlan.map((item, idx) => (
+                     <div key={idx} className="border border-slate-100 rounded-2xl p-4 bg-slate-50/60">
+                        <p className="text-xs font-bold text-slate-500 uppercase">{item.field}</p>
+                        <div className="flex items-center gap-2 mt-2 text-sm font-semibold text-slate-800">
+                           <span>{item.current}</span>
+                           <MoveRight className="w-4 h-4 text-slate-400" />
+                           <span className="text-green-600">{item.next}</span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-2">Window: {item.window}</p>
+                     </div>
+                  ))}
+               </div>
+            </Card>
+         </div>
+
+         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <Card>
+               <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-slate-800">Field Health</h3>
+                  <span className="text-xs font-semibold text-slate-400">Updated 2 mins ago</span>
+               </div>
+               <div className="space-y-4">
+                  {fields.map((field) => (
+                     <div key={field.name} className="flex items-center justify-between border border-slate-100 rounded-2xl p-4">
+                        <div>
+                           <p className="text-sm font-semibold text-slate-800">{field.name}</p>
+                           <p className="text-xs text-slate-500">{field.crop} • {field.stage}</p>
+                           <p className="text-xs text-slate-400 mt-1">{field.irrigation}</p>
+                        </div>
+                        <div className="flex flex-col items-end">
+                           <MiniGauge value={field.health} max={100} color="text-green-500" track="text-green-200" size={72}>
+                              <span className="text-lg font-bold text-slate-800">{field.health}%</span>
+                              <span className="text-[10px] text-slate-400 uppercase">Health</span>
+                           </MiniGauge>
+                           <span className="mt-2 text-xs text-slate-500">{field.tasks} tasks</span>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </Card>
+
+            <Card>
+               <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-slate-800">Upcoming Activities</h3>
+                  <button className="text-xs font-semibold text-green-600 hover:text-green-700">View schedule</button>
+               </div>
+               <div className="space-y-4">
+                  {upcomingActivities.map((activity, idx) => (
+                     <div key={idx} className="flex items-center justify-between border border-slate-100 rounded-2xl p-4">
+                        <div>
+                           <p className="text-sm font-semibold text-slate-800">{activity.title}</p>
+                           <p className="text-xs text-slate-500">{activity.field}</p>
+                           <p className="text-xs text-slate-400 mt-1">{activity.due}</p>
+                        </div>
+                        <div className="text-right">
+                           <p className="text-xs font-semibold text-slate-500 mb-1">Lead: {activity.owner}</p>
+                           <span className="px-3 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600">
+                              {activity.status}
+                           </span>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </Card>
+         </div>
+      </div>
+   );
+};
+
+const CropDoctor = () => {
+   const [symptomText, setSymptomText] = useState('');
+   const [analysis, setAnalysis] = useState<string | null>(null);
+   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+   const stats = [
+      { label: 'Cases Analyzed (7d)', value: 43, trend: '+8%', color: 'bg-green-100 text-green-700' },
+      { label: 'High-Risk Alerts', value: 3, trend: '2 resolved', color: 'bg-red-100 text-red-600' },
+      { label: 'Accuracy (last season)', value: '92%', trend: '+3% YoY', color: 'bg-amber-100 text-amber-700' },
+      { label: 'Lab Tests Requested', value: 6, trend: 'Awaiting 2', color: 'bg-blue-100 text-blue-700' },
+   ];
+
+   const diseaseAlerts = [
+      { crop: 'Tomato', issue: 'Late Blight risk', severity: 'High', probability: 0.82, recommendation: 'Spray copper-based fungicide within 24 hrs' },
+      { crop: 'Potato', issue: 'Leaf miner presence', severity: 'Medium', probability: 0.64, recommendation: 'Release parasitoid wasps / sticky traps' },
+      { crop: 'Wheat', issue: 'Rust spores detected nearby', severity: 'Watch', probability: 0.41, recommendation: 'Plan propiconazole spray if humidity stays high' },
+   ];
+
+   const recommendedTreatments = [
+      { name: 'Bio-fungicide rotation', window: 'Apply this evening', steps: ['Mix 2 ml/L of Bacillus-based fungicide', 'Cover underside of leaves', 'Repeat in 5 days if lesions persist'] },
+      { name: 'Targeted fertigation', window: 'Tomorrow 05:30', steps: ['Inject 8 kg KNO₃ via drip', 'Flush lines for 10 minutes', 'Log EC/ppm after run'] },
+   ];
+
+   const caseHistory = [
+      { date: '24 Nov • 08:10', title: 'Chili wilting diagnosis', action: 'Identified fusarium; issued soil drench plan' },
+      { date: '22 Nov • 15:45', title: 'Rice leaf blast alert closed', action: 'Farmer uploaded recovery photos' },
+      { date: '20 Nov • 11:20', title: 'Maize nutrient deficiency', action: 'Recommended foliar Zn + Mg mix' },
+   ];
+
+   const knowledgeCenter = [
+      { title: 'Spot the differences between early and late blight', duration: '4 min read' },
+      { title: 'Field checklist before sending samples to lab', duration: '2 min read' },
+      { title: 'Safe spray intervals during humid weeks', duration: 'Podcast • 8 min' },
+   ];
+
+   const handleAnalyze = () => {
+      if (!symptomText.trim()) return;
+      setIsAnalyzing(true);
+      setAnalysis(null);
+      setTimeout(() => {
+         setAnalysis('Likely early-stage fungal infection. Focus on drying canopy, schedule a copper spray, and revisit symptoms in 48 hours.');
+         setIsAnalyzing(false);
+      }, 1200);
+   };
+
+   return (
+      <div className="space-y-8">
+         <SectionHeader
+            title="Crop Doctor"
+            subtitle="Describe field symptoms, review AI alerts, and share recovery plans"
+            action={
+               <button className="flex items-center bg-slate-900 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md hover:bg-slate-800">
+                  <Upload className="w-4 h-4 mr-2" /> Upload Lab Report
+               </button>
+            }
+         />
+
+         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {stats.map((stat, idx) => (
+               <Card key={idx} className="space-y-2">
+                  <div className="text-xs font-bold uppercase text-slate-400">{stat.label}</div>
+                  <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
+                  <span className={`inline-flex items-center text-xs font-semibold px-3 py-1 rounded-full ${stat.color}`}>
+                     {stat.trend}
+                  </span>
+               </Card>
+            ))}
+         </div>
+
+         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <Card className="xl:col-span-2">
+               <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-slate-800 flex items-center gap-2"><Stethoscope className="w-4 h-4 text-green-600" /> Symptom checker</h3>
+                  <span className="text-xs font-semibold text-slate-400">Avg response 90 sec</span>
+               </div>
+               <textarea
+                  value={symptomText}
+                  onChange={(e) => setSymptomText(e.target.value)}
+                  rows={4}
+                  placeholder="Describe lesions, color changes, pest sightings, or recent weather events..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+               />
+               <div className="mt-4 flex flex-wrap gap-3">
+                  <button
+                     onClick={handleAnalyze}
+                     disabled={isAnalyzing || !symptomText.trim()}
+                     className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-green-200"
+                  >
+                     {isAnalyzing ? 'Analyzing...' : 'Analyze symptoms'}
+                  </button>
+                  <button
+                     onClick={() => setSymptomText('')}
+                     className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                  >
+                     Clear
+                  </button>
+                  <div className="flex-1 min-w-[220px] border border-dashed border-slate-200 rounded-2xl p-4 text-center text-sm text-slate-500">
+                     <Upload className="w-5 h-5 mx-auto mb-2 text-slate-400" />
+                     Drop plant images or lab sheets
+                  </div>
+               </div>
+               {analysis && (
+                  <div className="mt-6 p-4 bg-green-50 border border-green-100 rounded-2xl text-sm text-slate-700">
+                     <p className="font-semibold text-green-700 mb-1">Preliminary guidance</p>
+                     <p>{analysis}</p>
+                  </div>
+               )}
+            </Card>
+
+            <Card>
+               <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-slate-800">Knowledge center</h3>
+                  <button className="text-xs font-semibold text-green-600">View all</button>
+               </div>
+               <div className="space-y-4">
+                  {knowledgeCenter.map((item, idx) => (
+                     <div key={idx} className="p-4 rounded-2xl border border-slate-100 bg-slate-50/80">
+                        <p className="text-sm font-semibold text-slate-800">{item.title}</p>
+                        <p className="text-xs text-slate-500 mt-2">{item.duration}</p>
+                     </div>
+                  ))}
+               </div>
+            </Card>
+         </div>
+
+         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <Card className="xl:col-span-2">
+               <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-slate-800">AI disease alerts</h3>
+                  <span className="text-xs font-semibold text-slate-400">Updated 10 min ago</span>
+               </div>
+               <div className="space-y-4">
+                  {diseaseAlerts.map((alert, idx) => (
+                     <div key={idx} className="flex items-center justify-between border border-slate-100 rounded-2xl p-4">
+                        <div>
+                           <p className="text-sm font-semibold text-slate-800">{alert.crop}</p>
+                           <p className="text-xs text-slate-500">{alert.issue}</p>
+                           <p className="text-xs text-slate-400 mt-1">{alert.recommendation}</p>
+                        </div>
+                        <div className="text-right">
+                           <span className="px-3 py-1 rounded-full text-[11px] font-semibold bg-red-50 text-red-600 mb-2 inline-block">{alert.severity}</span>
+                           <p className="text-xs text-slate-500">Probability: {(alert.probability * 100).toFixed(0)}%</p>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </Card>
+
+            <Card>
+               <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-slate-800">Treatment queue</h3>
+                  <span className="text-xs text-slate-400">Auto sorted by urgency</span>
+               </div>
+               <div className="space-y-4">
+                  {recommendedTreatments.map((plan, idx) => (
+                     <div key={idx} className="border border-slate-100 rounded-2xl p-4">
+                        <p className="text-sm font-semibold text-slate-800">{plan.name}</p>
+                        <p className="text-xs text-green-600 font-semibold mt-1">{plan.window}</p>
+                        <ul className="mt-3 text-xs text-slate-500 space-y-2 list-disc list-inside">
+                           {plan.steps.map((step, i) => (
+                              <li key={i}>{step}</li>
+                           ))}
+                        </ul>
+                     </div>
+                  ))}
+               </div>
+            </Card>
+         </div>
+
+         <Card>
+            <div className="flex items-center justify-between mb-4">
+               <h3 className="font-bold text-slate-800">Recent cases</h3>
+               <button className="text-xs font-semibold text-green-600">Export log</button>
+            </div>
+            <div className="space-y-4">
+               {caseHistory.map((entry, idx) => (
+                  <div key={idx} className="flex items-start gap-4">
+                     <div className="w-32 text-xs font-semibold text-slate-500">{entry.date}</div>
+                     <div className="flex-1 border-l border-slate-100 pl-4">
+                        <p className="text-sm font-semibold text-slate-800">{entry.title}</p>
+                        <p className="text-xs text-slate-500 mt-1">{entry.action}</p>
+                     </div>
+                  </div>
+               ))}
+            </div>
+         </Card>
+      </div>
+   );
+};
+
+const ReportsAnalytics = () => {
+   const overviewCards = [
+      { label: 'Total Output Value', value: '₹56.3L', change: '+12.4%', positive: true },
+      { label: 'Input Cost / Acre', value: '₹18,200', change: '-4.1%', positive: true },
+      { label: 'Avg Profit Margin', value: '32%', change: '+2.7%', positive: true },
+      { label: 'Carbon Savings', value: '4.8 t CO₂e', change: '+0.6 t', positive: true },
+   ];
+
+   const revenueTrend = [
+      { month: 'Jan', revenue: 6.2, cost: 3.8 },
+      { month: 'Feb', revenue: 6.8, cost: 4.1 },
+      { month: 'Mar', revenue: 7.4, cost: 4.4 },
+      { month: 'Apr', revenue: 7.9, cost: 4.6 },
+      { month: 'May', revenue: 8.5, cost: 4.9 },
+      { month: 'Jun', revenue: 9.4, cost: 5.2 },
+      { month: 'Jul', revenue: 9.8, cost: 5.4 },
+      { month: 'Aug', revenue: 10.2, cost: 5.6 },
+      { month: 'Sep', revenue: 10.6, cost: 5.8 },
+   ];
+
+   const channelMix = [
+      { name: 'Local Mandis', value: 42, color: '#22C55E' },
+      { name: 'Agri Exporters', value: 28, color: '#10B981' },
+      { name: 'Retail Contracts', value: 18, color: '#F97316' },
+      { name: 'Direct Farmgate', value: 12, color: '#6366F1' },
+   ];
+
+   const efficiencyMetrics = [
+      { label: 'Water Use Efficiency', value: 86, target: 'Target 80%' },
+      { label: 'Nutrient Balance', value: 74, target: 'Target 70%' },
+      { label: 'Machinery Utilization', value: 63, target: 'Target 65%' },
+      { label: 'Labor Productivity', value: 91, target: 'Target 85%' },
+   ];
+
+   const reportDownloads = [
+      { name: 'Seasonal Yield Summary', updated: '25 Nov 2025', size: '2.3 MB', type: 'PDF' },
+      { name: 'Input Cost Ledger', updated: '22 Nov 2025', size: '1.1 MB', type: 'CSV' },
+      { name: 'Irrigation Schedule Log', updated: '21 Nov 2025', size: '895 KB', type: 'XLSX' },
+      { name: 'Pest & Disease Tracker', updated: '19 Nov 2025', size: '1.8 MB', type: 'PDF' },
+   ];
+
+   const upcomingDecisions = [
+      { title: 'Rabi sowing budget review', due: '28 Nov • 10 AM', owner: 'Finance Desk', tag: 'High Priority' },
+      { title: 'Fertilizer subsidy claim', due: '30 Nov • 4 PM', owner: 'Compliance', tag: 'Awaiting Docs' },
+      { title: 'Export commitment tranche #2', due: '02 Dec • 11 AM', owner: 'Sales', tag: 'On Track' },
+   ];
+
+   return (
+      <div className="space-y-8">
+         <SectionHeader
+            title="Reports & Analytics"
+            subtitle="Monitor profitability, resource efficiency, and compliance-ready exports"
+            action={
+               <div className="flex gap-2">
+                  <button className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center gap-2">
+                     <Filter className="w-4 h-4" /> Filters
+                  </button>
+                  <button className="px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-semibold shadow-lg shadow-green-200 flex items-center gap-2">
+                     <Download className="w-4 h-4" /> Export Dashboard
+                  </button>
+               </div>
+            }
+         />
+
+         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {overviewCards.map((card, idx) => (
+               <Card key={idx} className="space-y-2">
+                  <p className="text-xs font-bold text-slate-400 uppercase">{card.label}</p>
+                  <div className="text-2xl font-bold text-slate-900">{card.value}</div>
+                  <span
+                     className={`inline-flex items-center text-xs font-semibold px-3 py-1 rounded-full ${
+                        card.positive ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
+                     }`}
+                  >
+                     {card.change}
+                  </span>
+               </Card>
+            ))}
+         </div>
+
+         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <Card className="xl:col-span-2">
+               <div className="flex items-center justify-between mb-4">
+                  <div>
+                     <h3 className="font-bold text-slate-800">Revenue vs Inputs</h3>
+                     <p className="text-xs text-slate-400">FY25-to-date</p>
+                  </div>
+                  <select className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+                     <option>Monthly</option>
+                     <option>Weekly</option>
+                     <option>Quarterly</option>
+                  </select>
+               </div>
+               <ResponsiveContainer width="100%" height={280}>
+                  <AreaChart data={revenueTrend} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                     <defs>
+                        <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
+                           <stop offset="5%" stopColor="#22c55e" stopOpacity={0.25} />
+                           <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="cost" x1="0" y1="0" x2="0" y2="1">
+                           <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.25} />
+                           <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
+                        </linearGradient>
+                     </defs>
+                     <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                     <XAxis dataKey="month" stroke="#94A3B8" fontSize={12} />
+                     <YAxis stroke="#94A3B8" fontSize={12} unit=" L" />
+                     <Tooltip contentStyle={{ borderRadius: 16, borderColor: '#E2E8F0' }} />
+                     <Area type="monotone" dataKey="revenue" stroke="#22C55E" strokeWidth={2.5} fill="url(#rev)" name="Revenue (₹L)" />
+                     <Area type="monotone" dataKey="cost" stroke="#0EA5E9" strokeWidth={2} fill="url(#cost)" name="Input Cost (₹L)" />
+                  </AreaChart>
+               </ResponsiveContainer>
+            </Card>
+
+            <Card>
+               <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-slate-800">Sales channel mix</h3>
+                  <span className="text-xs text-slate-400">Rolling 90 days</span>
+               </div>
+               <ResponsiveContainer width="100%" height={240}>
+                  <PieChart>
+                     <Pie
+                        data={channelMix}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        innerRadius={50}
+                        paddingAngle={2}
+                     >
+                        {channelMix.map((entry, index) => (
+                           <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                     </Pie>
+                     <Tooltip />
+                  </PieChart>
+               </ResponsiveContainer>
+               <div className="grid grid-cols-2 gap-3 text-xs font-semibold text-slate-600">
+                  {channelMix.map((mix) => (
+                     <div key={mix.name} className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: mix.color }}></span>
+                        {mix.name}
+                        <span className="ml-auto text-slate-400">{mix.value}%</span>
+                     </div>
+                  ))}
+               </div>
+            </Card>
+         </div>
+
+         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <Card className="xl:col-span-2">
+               <div className="flex items-center justify-between mb-4">
+                  <div>
+                     <h3 className="font-bold text-slate-800">Compliance-ready reports</h3>
+                     <p className="text-xs text-slate-400">Auto refreshed nightly</p>
+                  </div>
+                  <button className="text-xs font-semibold text-green-600">Create custom report</button>
+               </div>
+               <div className="border border-slate-100 rounded-2xl overflow-hidden">
+                  <table className="w-full text-sm">
+                     <thead className="bg-slate-50 text-xs font-bold text-slate-400 uppercase">
+                        <tr>
+                           <th className="p-4 text-left">Report</th>
+                           <th className="p-4 text-left">Last updated</th>
+                           <th className="p-4 text-left">Format</th>
+                           <th className="p-4 text-right">Action</th>
+                        </tr>
+                     </thead>
+                     <tbody>
+                        {reportDownloads.map((report, idx) => (
+                           <tr key={idx} className="border-t border-slate-50">
+                              <td className="p-4 font-semibold text-slate-800">{report.name}</td>
+                              <td className="p-4 text-slate-500">{report.updated}</td>
+                              <td className="p-4 text-slate-500">{report.type} • {report.size}</td>
+                              <td className="p-4 text-right">
+                                 <button className="text-xs font-semibold text-green-600 hover:text-green-700 flex items-center gap-1 ml-auto">
+                                    <Download className="w-4 h-4" /> Download
+                                 </button>
+                              </td>
+                           </tr>
+                        ))}
+                     </tbody>
+                  </table>
+               </div>
+            </Card>
+
+            <Card>
+               <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-slate-800">Efficiency index</h3>
+                  <span className="text-xs text-slate-400">Vs seasonal targets</span>
+               </div>
+               <div className="space-y-4">
+                  {efficiencyMetrics.map((metric) => (
+                     <div key={metric.label} className="flex items-center justify-between border border-slate-100 rounded-2xl p-3">
+                        <div>
+                           <p className="text-sm font-semibold text-slate-800">{metric.label}</p>
+                           <p className="text-xs text-slate-400">{metric.target}</p>
+                        </div>
+                        <MiniGauge value={metric.value} max={100} color="text-green-500" track="text-slate-200" size={66}>
+                           <span className="text-base font-bold text-slate-800">{metric.value}%</span>
+                        </MiniGauge>
+                     </div>
+                  ))}
+               </div>
+            </Card>
+         </div>
+
+         <Card>
+            <div className="flex items-center justify-between mb-4">
+               <h3 className="font-bold text-slate-800">Upcoming decisions</h3>
+               <button className="text-xs font-semibold text-green-600">View calendar</button>
+            </div>
+            <div className="space-y-4">
+               {upcomingDecisions.map((decision, idx) => (
+                  <div key={idx} className="flex items-start gap-4">
+                     <div className="bg-slate-100 text-slate-600 text-xs font-semibold px-3 py-1 rounded-full">{decision.tag}</div>
+                     <div>
+                        <p className="text-sm font-semibold text-slate-800">{decision.title}</p>
+                        <p className="text-xs text-slate-500">{decision.due}</p>
+                        <p className="text-xs text-slate-400 mt-1">Owner: {decision.owner}</p>
+                     </div>
+                  </div>
+               ))}
+            </div>
+         </Card>
+      </div>
+   );
+};
+
+const AgriScorePage = () => {
+   const summaryCards = [
+      {
+         label: 'Overall AgriScore',
+         value: '82 / 100',
+         change: '+3.4 vs last audit',
+         positive: true,
+      },
+      {
+         label: 'Sustainability tier',
+         value: 'Gold',
+         change: 'meets 92% compliance',
+         positive: true,
+      },
+      {
+         label: 'Resilience outlook',
+         value: 'Low risk',
+         change: 'stable for 6 weeks',
+         positive: true,
+      },
+      {
+         label: 'Data confidence',
+         value: '97%',
+         change: 'all sensors syncing',
+         positive: true,
+      },
+   ];
+
+   const scoreBreakdown = [
+      { name: 'Field health', score: 84, benchmark: 78 },
+      { name: 'Resource use', score: 79, benchmark: 74 },
+      { name: 'Climate impact', score: 88, benchmark: 80 },
+      { name: 'Compliance', score: 91, benchmark: 85 },
+      { name: 'Supply readiness', score: 76, benchmark: 70 },
+   ];
+
+   const sustainabilityPillars = [
+      {
+         label: 'Water stewardship',
+         value: 86,
+         detail: 'Deficit irrigation in place',
+         status: 'Stable',
+         change: '+2.1 pts',
+         trend: 'Conserving 18% more vs LY',
+         gaugeColor: 'text-emerald-500',
+         barColor: 'bg-emerald-500',
+         accent: 'bg-emerald-50',
+      },
+      {
+         label: 'Soil vitality',
+         value: 79,
+         detail: 'Microbial balance trending up',
+         status: 'Improving',
+         change: '+1.4 pts',
+         trend: 'Compost program in progress',
+         gaugeColor: 'text-lime-500',
+         barColor: 'bg-lime-500',
+         accent: 'bg-lime-50',
+      },
+      {
+         label: 'Carbon intensity',
+         value: 68,
+         detail: 'Needs cover crop expansion',
+         status: 'Attention',
+         change: '-0.6 pts',
+         trend: 'Offset plan pending',
+         gaugeColor: 'text-amber-500',
+         barColor: 'bg-amber-500',
+         accent: 'bg-amber-50',
+      },
+      {
+         label: 'Input efficiency',
+         value: 92,
+         detail: 'Optimized fertigation',
+         status: 'Leading',
+         change: '+3.8 pts',
+         trend: 'Auto dosing covers 90%',
+         gaugeColor: 'text-emerald-500',
+         barColor: 'bg-emerald-500',
+         accent: 'bg-emerald-50',
+      },
+   ];
+
+   const certifications = [
+      { name: 'FSSAI exporter credential', status: 'Valid till Mar 2026', score: '98%', accent: 'text-green-600', icon: Shield },
+      { name: 'Global GAP checklist', status: 'Audit scheduled 12 Dec', score: 'In review', accent: 'text-amber-600', icon: Globe },
+      { name: 'Carbon smart farming', status: 'Pilot cohort', score: 'Pending data', accent: 'text-slate-500', icon: Award },
+   ];
+
+   const auditTimeline = [
+      { title: 'Soil regeneration audit', due: '28 Nov • Field cluster B', owner: 'Sustainability PMO', status: 'Ready' },
+      { title: 'ESG lender attestation', due: '02 Dec • Virtual', owner: 'Finance Ops', status: 'Docs in draft' },
+      { title: 'Carbon registry sync', due: '06 Dec • API push', owner: 'Data Services', status: 'Awaiting samples' },
+   ];
+
+   const riskAlerts = [
+      { label: 'Nitrogen overuse window', impact: 'Could reduce score by 4 pts', severity: 'Monitor closely' },
+      { label: 'Irrigation schedule variance', impact: '2 pivots skipped last week', severity: 'Investigate' },
+      { label: 'Field sensor downtime', impact: 'Block C offline 3 hrs', severity: 'Resolved' },
+   ];
+
+   const actionItems = [
+      { task: 'Deploy biochar trial plots', owner: 'R&D Crew', eta: 'Next 10 days', progress: 45 },
+      { task: 'Digitize pesticide logbooks', owner: 'Compliance', eta: 'Due this week', progress: 68 },
+      { task: 'Automate soil sample ingestion', owner: 'Data Team', eta: 'Sprint 47', progress: 22 },
+   ];
+
+   return (
+      <div className="space-y-8">
+         <SectionHeader
+            title="AgriScore"
+            subtitle="Live ESG, resilience, and compliance posture for your portfolio"
+            action={
+               <div className="flex gap-2">
+                  <button className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center gap-2">
+                     <Filter className="w-4 h-4" /> Configure weights
+                  </button>
+                  <button className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold shadow-lg shadow-slate-300 flex items-center gap-2">
+                     <Download className="w-4 h-4" /> Share snapshot
+                  </button>
+               </div>
+            }
+         />
+
+         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {summaryCards.map((card, idx) => (
+               <Card key={idx} className="space-y-2">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{card.label}</p>
+                  <div className="text-2xl font-bold text-slate-900">{card.value}</div>
+                  <span className={`text-xs font-semibold ${card.positive ? 'text-green-600' : 'text-red-600'}`}>{card.change}</span>
+               </Card>
+            ))}
+         </div>
+
+         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <Card className="xl:col-span-2">
+               <div className="flex items-center justify-between mb-4">
+                  <div>
+                     <h3 className="font-bold text-slate-800">Score contributors</h3>
+                     <p className="text-xs text-slate-400">Weighted pillars vs peer benchmark</p>
+                  </div>
+                  <span className="text-xs font-semibold text-slate-500">Weights auto-balanced</span>
+               </div>
+               <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={scoreBreakdown} margin={{ left: -20 }}>
+                     <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                     <XAxis dataKey="name" stroke="#94A3B8" fontSize={12} />
+                     <YAxis stroke="#94A3B8" fontSize={12} />
+                     <Tooltip contentStyle={{ borderRadius: 16, borderColor: '#E2E8F0' }} />
+                     <Bar dataKey="score" radius={[8, 8, 0, 0]} fill="#16A34A" name="Your score" />
+                     <Bar dataKey="benchmark" radius={[8, 8, 0, 0]} fill="#CBD5F5" name="Peer avg" />
+                  </BarChart>
+               </ResponsiveContainer>
+            </Card>
+
+            <Card>
+               <div className="flex items-center justify-between mb-6">
+                  <h3 className="font-bold text-slate-800">Certification readiness</h3>
+                  <span className="text-xs text-slate-400">Audit center</span>
+               </div>
+               <div className="space-y-4">
+                  {certifications.map((item, idx) => (
+                     <div key={idx} className="flex items-start gap-3 p-3 border border-slate-100 rounded-2xl">
+                        <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center">
+                           <item.icon className="w-5 h-5 text-slate-500" />
+                        </div>
+                        <div className="flex-1">
+                           <p className="text-sm font-semibold text-slate-800">{item.name}</p>
+                           <p className="text-xs text-slate-500">{item.status}</p>
+                        </div>
+                        <span className={`text-xs font-semibold ${item.accent}`}>{item.score}</span>
+                     </div>
+                  ))}
+               </div>
+            </Card>
+         </div>
+
+         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+               <div className="flex items-center justify-between mb-5">
+                  <h3 className="font-bold text-slate-800">Sustainability pillars</h3>
+                  <span className="text-xs text-slate-400">Target ≥ 75</span>
+               </div>
+               <div className="space-y-4">
+                  {sustainabilityPillars.map((pillar) => (
+                     <div
+                        key={pillar.label}
+                        className={`flex items-center gap-5 p-4 rounded-2xl border border-slate-100 ${pillar.accent} hover:border-emerald-200 transition-colors`}
+                     >
+                        <div className="flex flex-col items-center justify-center min-w-[96px]">
+                           <MiniGauge
+                              value={pillar.value}
+                              max={100}
+                              color={pillar.gaugeColor}
+                              track="text-slate-200"
+                              size={92}
+                              strokeWidth={8}
+                           >
+                              <span className="text-lg font-bold text-slate-900 leading-none">{pillar.value}</span>
+                              <span className="text-[10px] text-slate-500 mt-0.5">/100</span>
+                           </MiniGauge>
+                           <span className="mt-2 text-[11px] font-semibold text-slate-500">{pillar.status}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                           <div className="flex items-center justify-between gap-4">
+                              <p className="text-sm font-semibold text-slate-800">{pillar.label}</p>
+                              <span className={`text-xs font-semibold ${pillar.value >= 75 ? 'text-emerald-600' : 'text-amber-600'}`}>{pillar.change}</span>
+                           </div>
+                           <p className="text-xs text-slate-500 mt-1">{pillar.detail}</p>
+                           <div className="mt-3 h-2 bg-white/70 rounded-full overflow-hidden">
+                              <div className={`h-full rounded-full ${pillar.barColor}`} style={{ width: `${pillar.value}%` }}></div>
+                           </div>
+                           <p className="mt-1 text-[11px] text-slate-500">Target ≥ 75 • {pillar.trend}</p>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </Card>
+
+            <Card>
+               <div className="flex items-center justify-between mb-5">
+                  <h3 className="font-bold text-slate-800">Risk watchlist</h3>
+                  <span className="text-xs font-semibold text-orange-500">Auto-updated</span>
+               </div>
+               <div className="space-y-4">
+                  {riskAlerts.map((risk, idx) => (
+                     <div key={idx} className="p-4 border border-slate-100 rounded-2xl bg-slate-50">
+                        <div className="flex items-center gap-2 mb-1 text-xs font-semibold text-slate-500">
+                           <AlertCircle className="w-4 h-4 text-orange-400" />
+                           {risk.severity}
+                        </div>
+                        <p className="text-sm font-semibold text-slate-800">{risk.label}</p>
+                        <p className="text-xs text-slate-500">{risk.impact}</p>
+                     </div>
+                  ))}
+               </div>
+            </Card>
+         </div>
+
+         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+               <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-slate-800">Improvement roadmap</h3>
+                  <span className="text-xs text-slate-400">Next 30 days</span>
+               </div>
+               <div className="space-y-4">
+                  {actionItems.map((task, idx) => (
+                     <div key={idx} className="border border-slate-100 rounded-2xl p-4">
+                        <div className="flex items-center justify-between">
+                           <div>
+                              <p className="text-sm font-semibold text-slate-800">{task.task}</p>
+                              <p className="text-xs text-slate-500">Owner: {task.owner}</p>
+                           </div>
+                           <span className="text-xs font-semibold text-slate-500">{task.eta}</span>
+                        </div>
+                        <div className="mt-3 h-2 bg-slate-100 rounded-full overflow-hidden">
+                           <div className="h-full bg-green-500 rounded-full" style={{ width: `${task.progress}%` }}></div>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </Card>
+
+            <Card>
+               <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-slate-800">Audit & disclosure timeline</h3>
+                  <button className="text-xs font-semibold text-green-600">Sync calendar</button>
+               </div>
+               <div className="space-y-4">
+                  {auditTimeline.map((event, idx) => (
+                     <div key={idx} className="flex items-start gap-4">
+                        <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-bold">
+                           {idx + 1}
+                        </div>
+                        <div className="flex-1">
+                           <p className="text-sm font-semibold text-slate-800">{event.title}</p>
+                           <p className="text-xs text-slate-500">{event.due}</p>
+                           <p className="text-xs text-slate-400 mt-1">Lead: {event.owner}</p>
+                        </div>
+                        <span className="text-xs font-semibold text-slate-500">{event.status}</span>
+                     </div>
+                  ))}
+               </div>
+            </Card>
+         </div>
+      </div>
+   );
 };
 
 // --- Page Components ---
@@ -1155,12 +2044,18 @@ const WeatherPage = () => {
 };
 
 const FarmSettings = () => {
+   const [preferences, setPreferences] = useState({
+      notifications: true,
+      autoIrrigation: false,
+      darkMode: false,
+   });
+
   const devices = [
     { id: 1, name: 'Node-WZ-01', type: 'Sensor Node', status: 'Online', battery: 88, location: 'North Field' },
     { id: 2, name: 'Node-WZ-02', type: 'Sensor Node', status: 'Maintenance', battery: 12, location: 'North Field' },
-    { id: 3, name: 'Node-RS-01', type: 'Weather Station', status: 'Online', battery: 95, location: 'River Side' },
+   { id: 3, name: 'Node-RS-01', type: 'Weather Station', status: 'Offline', battery: 95, location: 'River Side' },
     { id: 4, name: 'Node-HT-01', type: 'Gateway', status: 'Offline', battery: 0, location: 'Hilltop' },
-    { id: 5, name: 'Pump-Controller-A', type: 'Actuator', status: 'Online', battery: 100, location: 'Pump House' },
+      { id: 5, name: 'Pump-Controller-A', type: 'Actuator', status: 'Offline', battery: 100, location: 'Pump House' },
   ];
 
   return (
@@ -1195,15 +2090,24 @@ const FarmSettings = () => {
                 <div className="space-y-4">
                    <div className="flex justify-between items-center">
                       <span className="text-sm font-medium text-slate-700">Notifications</span>
-                      <Toggle enabled={true} onChange={() => {}} />
+                      <Toggle
+                         enabled={preferences.notifications}
+                         onChange={(value) => setPreferences((prev) => ({ ...prev, notifications: value }))}
+                      />
                    </div>
                    <div className="flex justify-between items-center">
                       <span className="text-sm font-medium text-slate-700">Auto-Irrigation</span>
-                      <Toggle enabled={false} onChange={() => {}} />
+                      <Toggle
+                         enabled={preferences.autoIrrigation}
+                         onChange={(value) => setPreferences((prev) => ({ ...prev, autoIrrigation: value }))}
+                      />
                    </div>
                    <div className="flex justify-between items-center">
                       <span className="text-sm font-medium text-slate-700">Dark Mode</span>
-                      <Toggle enabled={false} onChange={() => {}} />
+                      <Toggle
+                         enabled={preferences.darkMode}
+                         onChange={(value) => setPreferences((prev) => ({ ...prev, darkMode: value }))}
+                      />
                    </div>
                    <div className="pt-2 border-t border-slate-100">
                       <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Timezone</label>
@@ -1282,6 +2186,8 @@ const FarmSettings = () => {
 
 const MyAccount = () => {
   const [activeTab, setActiveTab] = useState('profile');
+  const [commPrefs, setCommPrefs] = useState({ alerts: true, advisory: false, whatsapp: true });
+  const [securityPrefs, setSecurityPrefs] = useState({ twoFactor: true, biometrics: false, loginAlerts: true });
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: UserIcon },
@@ -1291,9 +2197,62 @@ const MyAccount = () => {
     { id: 'security', label: 'Security', icon: Shield },
   ];
 
+  const quickStats = [
+     { label: 'Plan tier', value: 'Pro', detail: 'Renews 25 Dec' },
+     { label: 'Farms linked', value: '08', detail: 'West Bengal cluster' },
+     { label: 'Usage this month', value: '72%', detail: 'Data & automation' },
+     { label: 'Last sync', value: '2h ago', detail: 'All devices healthy' },
+  ];
+
+  const profileHighlights = [
+     { label: 'Certified acreage', value: '1,200 ac' },
+     { label: 'Preferred advisor', value: 'AgriScore Prime' },
+     { label: 'Support SLA', value: '<4 hrs' },
+  ];
+
+  const documents = [
+     { name: 'KYC Verification.pdf', status: 'Verified', updated: '12 Oct 2025' },
+     { name: 'Land Ownership Registry', status: 'Pending review', updated: '08 Nov 2025' },
+     { name: 'Bank Mandate Letter', status: 'Uploaded', updated: '18 Sep 2025' },
+  ];
+
+  const activityTimeline = [
+     { title: 'Updated farm boundaries', time: 'Today • 10:15 AM', tag: 'Geomatics' },
+     { title: 'Invited agronomist Anita', time: 'Yesterday • 8:42 PM', tag: 'Team' },
+     { title: 'Downloaded subsidy dossier', time: '22 Nov • 4:05 PM', tag: 'Compliance' },
+  ];
+
+  const integrationCatalog = [
+     { name: 'Weather API (IMD)', status: 'Connected', sync: '45 min ago', icon: Cloud },
+     { name: 'Tractor telematics', status: 'Sync issue', sync: 'Needs re-auth', icon: Layers },
+     { name: 'Market price feed', status: 'Connected', sync: 'Live', icon: IndianRupee },
+     { name: 'Accounting (Tally)', status: 'In sandbox', sync: 'Setup pending', icon: BookOpen },
+  ];
+
+  const apiTokens = [
+     { name: 'Field Ops App', created: '05 Oct 2025', lastUsed: '2 days ago', scope: 'read:fields write:tasks' },
+     { name: 'Partner Coop', created: '18 Sep 2025', lastUsed: '6 hours ago', scope: 'read:analytics' },
+  ];
+
+  const commPrefList = [
+     { key: 'alerts', label: 'Critical agronomy alerts', desc: 'SMS + push notifications' },
+     { key: 'advisory', label: 'Monthly advisory brief', desc: 'Email digest every 30th' },
+     { key: 'whatsapp', label: 'WhatsApp updates', desc: 'Weather nudges & ticket updates' },
+  ];
+
   return (
     <div className="max-w-6xl mx-auto space-y-8">
        <SectionHeader title="My Account" subtitle="Manage your personal details and account settings" />
+
+       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          {quickStats.map((stat, idx) => (
+             <Card key={idx} className="space-y-1">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
+                <p className="text-xs text-slate-500 font-medium">{stat.detail}</p>
+             </Card>
+          ))}
+       </div>
 
        <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar Nav */}
@@ -1319,86 +2278,184 @@ const MyAccount = () => {
           {/* Main Content */}
           <div className="flex-1 space-y-6">
              {activeTab === 'profile' && (
-                <Card>
-                   <div className="flex items-start justify-between mb-8">
-                      <div className="flex items-center gap-6">
-                         <div className="relative">
-                            <div className="w-24 h-24 rounded-full bg-orange-100 flex items-center justify-center text-3xl font-bold text-orange-500 border-4 border-white shadow-lg">MK</div>
-                            <button className="absolute bottom-0 right-0 p-2 bg-slate-800 text-white rounded-full hover:bg-slate-700 shadow-md transition-colors">
-                               <Camera className="w-4 h-4" />
+                <div className="space-y-6">
+                   <Card>
+                      <div className="flex items-start justify-between mb-8">
+                         <div className="flex items-center gap-6">
+                            <div className="relative">
+                               <div className="w-24 h-24 rounded-full bg-orange-100 flex items-center justify-center text-3xl font-bold text-orange-500 border-4 border-white shadow-lg">MK</div>
+                               <button className="absolute bottom-0 right-0 p-2 bg-slate-800 text-white rounded-full hover:bg-slate-700 shadow-md transition-colors">
+                                  <Camera className="w-4 h-4" />
+                               </button>
+                            </div>
+                            <div>
+                               <h2 className="text-xl font-bold text-slate-900">Manish Kumar</h2>
+                               <p className="text-slate-500 text-sm">Farmer • Green Valley Estates</p>
+                               <div className="flex flex-wrap items-center gap-2 mt-2">
+                                  <span className="px-2 py-1 bg-green-50 text-green-700 text-[10px] font-bold uppercase rounded-md flex items-center border border-green-100">
+                                     <BadgeCheck className="w-3 h-3 mr-1" /> Kisan ID Verified
+                                  </span>
+                                  <span className="text-xs text-slate-400">Joined Jan 2023</span>
+                               </div>
+                            </div>
+                         </div>
+                         <div className="text-right hidden md:block">
+                            <div className="text-sm font-bold text-slate-700 mb-1">Profile Strength</div>
+                            <div className="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
+                               <div className="h-full bg-green-500 w-[85%] rounded-full"></div>
+                            </div>
+                            <div className="text-xs text-green-600 font-bold mt-1">85% Complete</div>
+                         </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                         {profileHighlights.map((item) => (
+                            <div key={item.label} className="border border-slate-100 rounded-2xl p-4 bg-slate-50/70">
+                               <p className="text-xs text-slate-400 uppercase font-semibold">{item.label}</p>
+                               <p className="text-lg font-bold text-slate-800">{item.value}</p>
+                            </div>
+                         ))}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                         <div className="space-y-4">
+                            <div>
+                               <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Full Name</label>
+                               <div className="relative">
+                                  <UserIcon className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                                  <input type="text" defaultValue="Manish Kumar" className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
+                               </div>
+                            </div>
+                            <div>
+                               <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Email Address</label>
+                               <div className="relative">
+                                  <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                                  <input type="email" defaultValue="kmanish45@gmail.com" className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
+                               </div>
+                            </div>
+                            <div>
+                               <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Phone Number</label>
+                               <div className="relative">
+                                  <Phone className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                                  <input type="tel" defaultValue="+91 98765 43210" className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
+                               </div>
+                            </div>
+                         </div>
+                         <div className="space-y-4">
+                            <div>
+                               <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Location</label>
+                               <div className="relative">
+                                  <MapPin className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                                  <input type="text" defaultValue="Agarpara, India" className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
+                               </div>
+                            </div>
+                            <div>
+                               <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Language</label>
+                               <div className="relative">
+                                  <Globe className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                                  <select className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all appearance-none">
+                                     <option>English (India)</option>
+                                     <option>Hindi</option>
+                                     <option>Punjabi</option>
+                                   </select>
+                               </div>
+                            </div>
+                            <div>
+                               <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Preferred contact time</label>
+                               <select className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:border-green-500 focus:ring-2 focus:ring-green-500/20">
+                                  <option>08:00 – 12:00 IST</option>
+                                  <option>12:00 – 16:00 IST</option>
+                                  <option>16:00 – 20:00 IST</option>
+                               </select>
+                            </div>
+                         </div>
+                      </div>
+
+                      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                         {[
+                            { label: 'Kisan ID', value: 'WB-45-9821', verified: true },
+                            { label: 'PAN / GST', value: 'ABCPK1234F', verified: true },
+                            { label: 'Subsidy wallet', value: '₹3.2L available', verified: false },
+                         ].map((item) => (
+                            <div key={item.label} className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                               <div>
+                                  <p className="text-xs text-slate-400 uppercase font-semibold">{item.label}</p>
+                                  <p className="text-sm font-bold text-slate-800">{item.value}</p>
+                               </div>
+                               {item.verified ? (
+                                  <BadgeCheck className="w-4 h-4 text-green-500" />
+                               ) : (
+                                  <AlertCircle className="w-4 h-4 text-amber-500" />
+                               )}
+                            </div>
+                         ))}
+                      </div>
+
+                      <div className="mt-8 flex justify-end">
+                         <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-green-200 transition-colors flex items-center">
+                            <Save className="w-4 h-4 mr-2" /> Save Changes
+                         </button>
+                      </div>
+                   </Card>
+
+                   <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                      <Card>
+                         <h3 className="font-bold text-slate-800 mb-4">Communication preferences</h3>
+                         <div className="space-y-4">
+                            {commPrefList.map((pref) => (
+                               <div key={pref.key} className="flex items-start justify-between gap-4">
+                                  <div>
+                                     <p className="text-sm font-semibold text-slate-800">{pref.label}</p>
+                                     <p className="text-xs text-slate-500">{pref.desc}</p>
+                                  </div>
+                                  <Toggle
+                                     enabled={commPrefs[pref.key as keyof typeof commPrefs]}
+                                     onChange={(value) =>
+                                        setCommPrefs((prev) => ({ ...prev, [pref.key as keyof typeof commPrefs]: value }))
+                                     }
+                                  />
+                               </div>
+                            ))}
+                         </div>
+                      </Card>
+
+                      <Card>
+                         <h3 className="font-bold text-slate-800 mb-4">Document locker</h3>
+                         <div className="space-y-4">
+                            {documents.map((doc, idx) => (
+                               <div key={idx} className="p-3 border border-slate-100 rounded-2xl flex items-center justify-between">
+                                  <div>
+                                     <p className="text-sm font-semibold text-slate-800">{doc.name}</p>
+                                     <p className="text-xs text-slate-500">Updated {doc.updated}</p>
+                                  </div>
+                                  <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">{doc.status}</span>
+                               </div>
+                            ))}
+                            <button className="mt-2 text-xs font-bold text-green-600 flex items-center">
+                               <Upload className="w-4 h-4 mr-1" /> Upload new document
                             </button>
                          </div>
-                         <div>
-                            <h2 className="text-xl font-bold text-slate-900">Manish Kumar</h2>
-                            <p className="text-slate-500 text-sm">Farmer • Green Valley Estates</p>
-                            <div className="flex items-center gap-2 mt-2">
-                               <span className="px-2 py-1 bg-green-50 text-green-700 text-[10px] font-bold uppercase rounded-md flex items-center border border-green-100">
-                                  <BadgeCheck className="w-3 h-3 mr-1" /> Kisan ID Verified
-                               </span>
-                               <span className="text-xs text-slate-400">Joined Jan 2023</span>
-                            </div>
-                         </div>
-                      </div>
-                      <div className="text-right hidden sm:block">
-                         <div className="text-sm font-bold text-slate-700 mb-1">Profile Strength</div>
-                         <div className="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-green-500 w-[85%] rounded-full"></div>
-                         </div>
-                         <div className="text-xs text-green-600 font-bold mt-1">85% Complete</div>
-                      </div>
-                   </div>
+                      </Card>
 
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-4">
-                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Full Name</label>
-                            <div className="relative">
-                               <UserIcon className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                               <input type="text" defaultValue="Manish Kumar" className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
-                            </div>
+                      <Card>
+                         <h3 className="font-bold text-slate-800 mb-4">Recent account activity</h3>
+                         <div className="space-y-4">
+                            {activityTimeline.map((item, idx) => (
+                               <div key={idx} className="flex gap-3">
+                                  <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-semibold text-sm">
+                                     {idx + 1}
+                                  </div>
+                                  <div>
+                                     <p className="text-sm font-semibold text-slate-800">{item.title}</p>
+                                     <p className="text-xs text-slate-500">{item.time}</p>
+                                     <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full mt-1">{item.tag}</span>
+                                  </div>
+                               </div>
+                            ))}
                          </div>
-                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Email Address</label>
-                            <div className="relative">
-                               <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                               <input type="email" defaultValue="kmanish45@gmail.com" className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
-                            </div>
-                         </div>
-                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Phone Number</label>
-                            <div className="relative">
-                               <Phone className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                               <input type="tel" defaultValue="+91 98765 43210" className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
-                            </div>
-                         </div>
-                      </div>
-                      <div className="space-y-4">
-                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Location</label>
-                            <div className="relative">
-                               <MapPin className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                               <input type="text" defaultValue="Agarpara, India" className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
-                            </div>
-                         </div>
-                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Language</label>
-                            <div className="relative">
-                               <Globe className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                               <select className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all appearance-none">
-                                  <option>English (India)</option>
-                                  <option>Hindi</option>
-                                  <option>Punjabi</option>
-                                </select>
-                            </div>
-                         </div>
-                      </div>
+                      </Card>
                    </div>
-                   <div className="mt-8 flex justify-end">
-                      <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-green-200 transition-colors flex items-center">
-                         <Save className="w-4 h-4 mr-2" /> Save Changes
-                      </button>
-                   </div>
-                </Card>
+                </div>
              )}
 
              {activeTab === 'subscription' && (
@@ -1478,35 +2535,137 @@ const MyAccount = () => {
                    </div>
                 </Card>
              )}
+
+             {activeTab === 'integrations' && (
+                <div className="space-y-6">
+                   <Card>
+                      <div className="flex items-center justify-between mb-6">
+                         <div>
+                            <h3 className="font-bold text-slate-800">Connected integrations</h3>
+                            <p className="text-xs text-slate-500">Sync agronomic data with your existing stack</p>
+                         </div>
+                         <button className="text-xs font-bold text-green-600 bg-green-50 px-3 py-1.5 rounded-lg hover:bg-green-100">Add connector</button>
+                      </div>
+                      <div className="space-y-4">
+                         {integrationCatalog.map((integration, idx) => (
+                            <div key={idx} className="flex items-center justify-between p-3 border border-slate-100 rounded-2xl">
+                               <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center">
+                                     <integration.icon className="w-5 h-5 text-slate-500" />
+                                  </div>
+                                  <div>
+                                     <p className="text-sm font-semibold text-slate-800">{integration.name}</p>
+                                     <p className="text-xs text-slate-500">Last sync: {integration.sync}</p>
+                                  </div>
+                               </div>
+                               <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                                  integration.status === 'Connected'
+                                     ? 'bg-green-50 text-green-700'
+                                     : integration.status === 'Sync issue'
+                                        ? 'bg-amber-50 text-amber-600'
+                                        : 'bg-slate-100 text-slate-600'
+                               }`}>
+                                  {integration.status}
+                               </span>
+                            </div>
+                         ))}
+                      </div>
+                   </Card>
+
+                   <Card>
+                      <div className="flex items-center justify-between mb-4">
+                         <h3 className="font-bold text-slate-800">API tokens & webhooks</h3>
+                         <button className="text-xs font-bold text-slate-500 hover:text-slate-800">Generate token</button>
+                      </div>
+                      <div className="space-y-4">
+                         {apiTokens.map((token, idx) => (
+                            <div key={idx} className="p-4 border border-slate-100 rounded-2xl">
+                               <div className="flex items-center justify-between">
+                                  <div>
+                                     <p className="text-sm font-semibold text-slate-800">{token.name}</p>
+                                     <p className="text-xs text-slate-500">Scopes: {token.scope}</p>
+                                  </div>
+                                  <span className="text-xs text-slate-400">Created {token.created}</span>
+                               </div>
+                               <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+                                  <span>Last used {token.lastUsed}</span>
+                                  <button className="text-slate-400 hover:text-red-500">Revoke</button>
+                               </div>
+                            </div>
+                         ))}
+                      </div>
+                   </Card>
+                </div>
+             )}
              
              {activeTab === 'security' && (
-                <Card>
-                    <h3 className="font-bold text-slate-800 mb-6">Login History</h3>
-                    <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-slate-400 uppercase font-bold bg-slate-50">
+                <div className="space-y-6">
+                   <Card>
+                      <h3 className="font-bold text-slate-800 mb-4">Security controls</h3>
+                      <div className="space-y-4">
+                         {[ 
+                            { key: 'twoFactor', label: 'Two-factor authentication', desc: 'OTP over SMS + authenticator' },
+                            { key: 'biometrics', label: 'Biometric unlock on mobile', desc: 'Face ID / Fingerprint' },
+                            { key: 'loginAlerts', label: 'Login alerts', desc: 'Notify me for new devices' },
+                         ].map((setting) => (
+                            <div key={setting.key} className="flex items-start justify-between gap-4">
+                               <div>
+                                  <p className="text-sm font-semibold text-slate-800">{setting.label}</p>
+                                  <p className="text-xs text-slate-500">{setting.desc}</p>
+                               </div>
+                               <Toggle
+                                  enabled={securityPrefs[setting.key as keyof typeof securityPrefs]}
+                                  onChange={(value) =>
+                                     setSecurityPrefs((prev) => ({ ...prev, [setting.key as keyof typeof securityPrefs]: value }))
+                                  }
+                               />
+                            </div>
+                         ))}
+                      </div>
+                      <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-500">
+                         <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <p className="font-semibold text-slate-800 text-sm">Last password change</p>
+                            <p>14 Aug 2025</p>
+                         </div>
+                         <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <p className="font-semibold text-slate-800 text-sm">Recovery email</p>
+                            <p>backup@agriscore.in</p>
+                         </div>
+                         <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <p className="font-semibold text-slate-800 text-sm">Trusted devices</p>
+                            <p>4 active sessions</p>
+                         </div>
+                      </div>
+                   </Card>
+
+                   <Card>
+                      <h3 className="font-bold text-slate-800 mb-6">Login history</h3>
+                      <table className="w-full text-sm text-left">
+                         <thead className="text-xs text-slate-400 uppercase font-bold bg-slate-50">
                             <tr>
-                                <th className="px-4 py-3 rounded-l-lg">Device</th>
-                                <th className="px-4 py-3">Location</th>
-                                <th className="px-4 py-3">Time</th>
-                                <th className="px-4 py-3 rounded-r-lg">Status</th>
+                               <th className="px-4 py-3 rounded-l-lg">Device</th>
+                               <th className="px-4 py-3">Location</th>
+                               <th className="px-4 py-3">Time</th>
+                               <th className="px-4 py-3 rounded-r-lg">Status</th>
                             </tr>
-                        </thead>
-                        <tbody>
+                         </thead>
+                         <tbody>
                             <tr className="border-b border-slate-50">
-                                <td className="px-4 py-4 font-medium text-slate-700 flex items-center gap-2"><Smartphone className="w-4 h-4" /> iPhone 14 Pro</td>
-                                <td className="px-4 py-4 text-slate-500">Agarpara, India</td>
-                                <td className="px-4 py-4 text-slate-500">Just now</td>
-                                <td className="px-4 py-4"><span className="text-green-600 font-bold text-xs bg-green-50 px-2 py-1 rounded">Active</span></td>
+                               <td className="px-4 py-4 font-medium text-slate-700 flex items-center gap-2"><Smartphone className="w-4 h-4" /> iPhone 14 Pro</td>
+                               <td className="px-4 py-4 text-slate-500">Agarpara, India</td>
+                               <td className="px-4 py-4 text-slate-500">Just now</td>
+                               <td className="px-4 py-4"><span className="text-green-600 font-bold text-xs bg-green-50 px-2 py-1 rounded">Active</span></td>
                             </tr>
                             <tr>
-                                <td className="px-4 py-4 font-medium text-slate-700 flex items-center gap-2"><Globe className="w-4 h-4" /> Chrome / Windows</td>
-                                <td className="px-4 py-4 text-slate-500">Kolkata, India</td>
-                                <td className="px-4 py-4 text-slate-500">Yesterday, 10:23 PM</td>
-                                <td className="px-4 py-4"><span className="text-slate-400 font-bold text-xs bg-slate-50 px-2 py-1 rounded">Logged Out</span></td>
+                               <td className="px-4 py-4 font-medium text-slate-700 flex items-center gap-2"><Globe className="w-4 h-4" /> Chrome / Windows</td>
+                               <td className="px-4 py-4 text-slate-500">Kolkata, India</td>
+                               <td className="px-4 py-4 text-slate-500">Yesterday, 10:23 PM</td>
+                               <td className="px-4 py-4"><span className="text-slate-400 font-bold text-xs bg-slate-50 px-2 py-1 rounded">Logged Out</span></td>
                             </tr>
-                        </tbody>
-                    </table>
-                </Card>
+                         </tbody>
+                      </table>
+                   </Card>
+                </div>
              )}
           </div>
        </div>
@@ -1515,372 +2674,175 @@ const MyAccount = () => {
 };
 
 const HelpSupport = () => {
-    // Mode: 'text' or 'voice'
-    const [mode, setMode] = useState<'text' | 'voice'>('text');
-    
-    // Text Chat State
-    const [messages, setMessages] = useState<{role: 'user' | 'model', text: string}[]>([
-        { role: 'model', text: 'Hello! I am your AgriScore Assistant. Ask me anything about your farm, crop health, or weather conditions.' }
-    ]);
-    const [input, setInput] = useState('');
-    const [isTextLoading, setIsTextLoading] = useState(false);
-    const textChatSession = useRef<any>(null);
-    const chatEndRef = useRef<HTMLDivElement>(null);
+   const [messages, setMessages] = useState<{role: 'user' | 'model', text: string}[]>([
+      { role: 'model', text: 'Hi! I am your AgriScore assistant. Ask me anything about crops, soil, or weather.' }
+   ]);
+   const [input, setInput] = useState('');
+   const [isTextLoading, setIsTextLoading] = useState(false);
+   const chatEndRef = useRef<HTMLDivElement>(null);
 
-    // Voice Chat State
-    const [isLiveConnected, setIsLiveConnected] = useState(false);
-    const [voiceStatus, setVoiceStatus] = useState('Disconnected');
-    const [isMuted, setIsMuted] = useState(false);
-    
-    const liveSessionRef = useRef<any>(null); // For sessionPromise
-    const inputAudioContextRef = useRef<AudioContext | null>(null);
-    const outputAudioContextRef = useRef<AudioContext | null>(null);
-    const nextStartTimeRef = useRef<number>(0);
-    const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
+   const faqs = [
+      { question: 'How do I improve my AgriScore?', answer: 'Review soil moisture, nutrient balance, and device health daily. Small adjustments every week keep the score high.' },
+      { question: 'Can I get weather alerts?', answer: 'Enable notifications in Settings → Weather. You will get SMS and app alerts for rain, wind, and heat spikes.' },
+      { question: 'Where is my soil report?', answer: 'Open the Soil & Water tab and tap Export. You can download the full CSV anytime.' }
+   ];
 
-    // Scroll text chat
-    useEffect(() => {
-        if (mode === 'text') chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, mode]);
+   const contacts = [
+      { label: 'Email', value: 'support@agriscore.in', icon: Mail },
+      { label: 'Phone', value: '+91 98765 43210', icon: Phone },
+      { label: 'Hours', value: 'Mon–Sat • 8am–8pm IST', icon: Clock },
+   ];
 
-    // Cleanup Audio on Unmount or Mode Switch
-    useEffect(() => {
-        return () => {
-            disconnectFromLiveAPI();
-        };
-    }, []);
+   useEffect(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+   }, [messages]);
 
-    // --- Text Chat Logic ---
-    const handleSendText = async () => {
-        if (!input.trim()) return;
-        const userMsg = input;
-        setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
-        setInput('');
-        setIsTextLoading(true);
+   const handleSendText = async () => {
+      if (!input.trim()) return;
+      const userMsg = input;
+      setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+      setInput('');
+      setIsTextLoading(true);
 
-        try {
-            const apiKey = process.env.API_KEY;
-            if (!apiKey || apiKey === 'your-api-key-here') {
-                throw new Error("API Key missing or invalid");
-            }
-            
-            const ai = new GoogleGenAI({ apiKey });
-            
-            // Build conversation history
-            const contents = messages
-                .filter(m => m.role === 'user' || m.role === 'model')
-                .map(m => ({
-                    role: m.role === 'user' ? 'user' : 'model',
-                    parts: [{ text: m.text }]
-                }));
-            
-            // Add current message
-            contents.push({
-                role: 'user',
-                parts: [{ text: userMsg }]
-            });
-            
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: contents,
-                systemInstruction: 'You are an expert agricultural assistant helping farmers with crop management, soil health, weather patterns, and farm operations. Provide practical, actionable advice.'
-            });
-            
-            const text = response.text || "No response received";
-            setMessages(prev => [...prev, { role: 'model', text }]);
-        } catch (error: any) {
-            console.error("Text chat error:", error);
-            const errorMsg = error.message || "Error connecting to AI.";
-            setMessages(prev => [...prev, { role: 'model', text: `Error: ${errorMsg}` }]);
-        } finally {
-            setIsTextLoading(false);
-        }
-    };
+      try {
+         const apiKey = process.env.API_KEY;
+         if (!apiKey || apiKey === 'your-api-key-here') {
+            throw new Error('API Key missing or invalid');
+         }
 
-    // --- Voice Chat Logic (Live API) ---
-    const connectToLiveAPI = async () => {
-        if (!process.env.API_KEY) {
-            alert("API Key is missing!");
-            return;
-        }
+         const ai = new GoogleGenAI({ apiKey });
 
-        try {
-            setVoiceStatus("Connecting...");
-            
-            // 1. Setup Audio Contexts
-            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-            const inputCtx = new AudioContext({ sampleRate: 16000 });
-            const outputCtx = new AudioContext({ sampleRate: 24000 });
-            
-            inputAudioContextRef.current = inputCtx;
-            outputAudioContextRef.current = outputCtx;
-            nextStartTimeRef.current = 0;
+         const contents = messages.map(m => ({
+            role: m.role === 'user' ? 'user' : 'model',
+            parts: [{ text: m.text }]
+         }));
 
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-            
-            // 2. Connect Session
-            const sessionPromise = ai.live.connect({
-                model: 'gemini-2.5-flash-native-audio-preview-09-2025',
-                config: {
-                    responseModalities: [Modality.AUDIO],
-                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } } },
-                    systemInstruction: 'You are a friendly and helpful agricultural assistant. Keep answers concise.',
-                },
-                callbacks: {
-                    onopen: async () => {
-                        console.log("Live API Connected");
-                        setVoiceStatus("Listening");
-                        setIsLiveConnected(true);
+         contents.push({
+            role: 'user',
+            parts: [{ text: userMsg }]
+         });
 
-                        // Start Mic Stream
-                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                        const source = inputCtx.createMediaStreamSource(stream);
-                        sourceNodeRef.current = source;
-                        
-                        const scriptProcessor = inputCtx.createScriptProcessor(4096, 1, 1);
-                        scriptProcessor.onaudioprocess = (e) => {
-                            if (isMuted) return; // Simple mute
-                            const inputData = e.inputBuffer.getChannelData(0);
-                            const pcmBlob = createBlob(inputData);
-                            
-                            // Send to model
-                            sessionPromise.then((session) => {
-                                session.sendRealtimeInput({ media: pcmBlob });
-                            });
-                        };
-                        
-                        source.connect(scriptProcessor);
-                        scriptProcessor.connect(inputCtx.destination);
-                    },
-                    onmessage: async (message: LiveServerMessage) => {
-                         // Play audio response
-                        const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-                        if (base64Audio && outputCtx) {
-                            setVoiceStatus("Speaking");
-                            
-                            // Simple visual reset after speaking starts
-                            setTimeout(() => setVoiceStatus("Listening"), 3000); 
+         const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents,
+            systemInstruction: 'You are an expert agricultural assistant helping farmers with crop management, soil health, weather patterns, and farm operations. Provide practical, actionable advice.'
+         });
 
-                            nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outputCtx.currentTime);
-                            const audioBuffer = await decodeAudioData(
-                                decode(base64Audio), 
-                                outputCtx, 
-                                24000, 
-                                1
-                            );
-                            const source = outputCtx.createBufferSource();
-                            source.buffer = audioBuffer;
-                            source.connect(outputCtx.destination);
-                            source.start(nextStartTimeRef.current);
-                            nextStartTimeRef.current += audioBuffer.duration;
-                        }
-                    },
-                    onclose: () => {
-                        console.log("Live API Closed");
-                        setVoiceStatus("Disconnected");
-                        setIsLiveConnected(false);
-                    },
-                    onerror: (e) => {
-                        console.error("Live API Error", e);
-                        setVoiceStatus("Error");
-                        setIsLiveConnected(false);
-                    }
-                }
-            });
-            liveSessionRef.current = sessionPromise;
+         const text = response.text || 'No response received';
+         setMessages(prev => [...prev, { role: 'model', text }]);
+      } catch (error: any) {
+         console.error('Text chat error:', error);
+         const errorMsg = error.message || 'Error connecting to AI.';
+         setMessages(prev => [...prev, { role: 'model', text: `Error: ${errorMsg}` }]);
+      } finally {
+         setIsTextLoading(false);
+      }
+   };
 
-        } catch (err) {
-            console.error(err);
-            setVoiceStatus("Failed to Connect");
-            setIsLiveConnected(false);
-        }
-    };
+   return (
+      <div className="space-y-6">
+         <SectionHeader title="Help & Support" subtitle="Chat with us, read quick answers, or reach out directly." />
+         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 h-[calc(100vh-180px)]">
+            <Card className="xl:col-span-2 h-full flex flex-col p-0">
+               <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                     <div className="w-12 h-12 rounded-full bg-green-50 text-green-600 flex items-center justify-center">
+                        <SparklesIcon className="w-6 h-6" />
+                     </div>
+                     <div>
+                        <p className="text-sm font-semibold text-slate-800">AgriScore Chatbot</p>
+                        <p className="text-xs text-slate-500">Instant answers powered by Gemini</p>
+                     </div>
+                  </div>
+                  <div className="text-xs font-semibold text-green-600 bg-green-50 px-3 py-1 rounded-full flex items-center gap-2">
+                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /> Online
+                  </div>
+               </div>
 
-    const disconnectFromLiveAPI = () => {
-        // Close Contexts
-        inputAudioContextRef.current?.close();
-        outputAudioContextRef.current?.close();
-        
-        // Stop Tracks
-        sourceNodeRef.current?.mediaStream?.getTracks().forEach(t => t.stop());
-        
-        // Close Session (Not explicitly available on promise, rely on context closure)
-        setIsLiveConnected(false);
-        setVoiceStatus("Disconnected");
-    };
-
-    return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-140px)]">
-            {/* Sidebar remains same */}
-            <div className="lg:col-span-1 space-y-6 overflow-y-auto pr-2">
-                <SectionHeader title="Help Center" subtitle="Get support and answers" />
-                <Card className="bg-green-600 text-white border-none">
-                    <h3 className="font-bold text-lg mb-2">Need immediate help?</h3>
-                    <p className="text-green-100 text-sm mb-4">Our agronomy experts are available 24/7 for emergency consultation.</p>
-                    <button className="bg-white text-green-700 w-full py-2.5 rounded-xl font-bold text-sm hover:bg-green-50 transition-colors flex items-center justify-center">
-                        <Phone className="w-4 h-4 mr-2" /> Call Support
-                    </button>
-                </Card>
-                <div className="space-y-3">
-                    <h4 className="font-bold text-slate-700 text-sm uppercase tracking-wide">Common Topics</h4>
-                    {['Soil Health Management', 'Pest Control Guidelines', 'Irrigation Scheduling', 'App Troubleshooting'].map((topic, i) => (
-                        <button key={i} className="w-full text-left p-4 bg-white rounded-xl border border-slate-100 hover:border-green-200 hover:shadow-sm transition-all text-sm font-medium text-slate-700 flex justify-between items-center group">
-                            {topic}
-                            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-green-500" />
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Chat Area */}
-            <Card className="lg:col-span-2 flex flex-col h-full p-0 overflow-hidden border border-slate-200">
-                {/* Header with Toggle */}
-                <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full ${mode === 'voice' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'} flex items-center justify-center`}>
-                            {mode === 'voice' ? <AudioWaveform className="w-5 h-5" /> : <SparklesIcon className="w-5 h-5" />}
+               <div className="flex-1 overflow-y-auto bg-slate-50 p-6 space-y-4">
+                  {messages.map((msg, idx) => (
+                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[80%] rounded-2xl p-4 text-sm leading-relaxed shadow-sm ${
+                           msg.role === 'user'
+                              ? 'bg-green-600 text-white rounded-br-sm'
+                              : 'bg-white text-slate-700 border border-slate-100 rounded-bl-sm'
+                        }`}>
+                           {msg.text}
                         </div>
-                        <div>
-                            <h3 className="font-bold text-slate-800 text-sm">AgriScore Assistant</h3>
-                            <p className="text-xs text-slate-500 flex items-center gap-1">
-                                <span className={`w-1.5 h-1.5 rounded-full ${isLiveConnected ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`}></span> 
-                                {mode === 'voice' ? 'Voice Mode' : 'Text Mode'}
-                            </p>
+                     </div>
+                  ))}
+                  {isTextLoading && (
+                     <div className="flex justify-start">
+                        <div className="bg-white p-4 rounded-2xl rounded-bl-sm border border-slate-100 shadow-sm flex gap-2 items-center">
+                           <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" />
+                           <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-100" />
+                           <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-200" />
                         </div>
-                    </div>
-                    {/* Toggle Switch */}
-                    <div className="flex bg-white rounded-lg p-1 border border-slate-200">
-                        <button 
-                            onClick={() => { setMode('text'); disconnectFromLiveAPI(); }}
-                            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${mode === 'text' ? 'bg-green-100 text-green-700' : 'text-slate-500 hover:text-slate-700'}`}
-                        >
-                            Text
-                        </button>
-                        <button 
-                            onClick={() => setMode('voice')}
-                            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${mode === 'voice' ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:text-slate-700'}`}
-                        >
-                            Voice
-                        </button>
-                    </div>
-                </div>
+                     </div>
+                  )}
+                  <div ref={chatEndRef} />
+               </div>
 
-                {/* Content Area */}
-                <div className="flex-1 overflow-y-auto bg-[#F8F9FC] relative">
-                    {mode === 'text' ? (
-                        <div className="p-4 space-y-4 h-full overflow-y-auto">
-                            {messages.map((msg, idx) => (
-                                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`max-w-[80%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
-                                        msg.role === 'user' 
-                                        ? 'bg-green-600 text-white rounded-tr-sm' 
-                                        : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'
-                                    }`}>
-                                        {msg.text}
-                                    </div>
-                                </div>
-                            ))}
-                            {isTextLoading && (
-                                <div className="flex justify-start">
-                                    <div className="bg-white p-4 rounded-2xl rounded-tl-sm border border-slate-100 shadow-sm flex gap-2 items-center">
-                                        <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></span>
-                                        <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-100"></span>
-                                        <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-200"></span>
-                                    </div>
-                                </div>
-                            )}
-                            <div ref={chatEndRef} />
-                        </div>
-                    ) : (
-                        // --- Voice Mode UI ---
-                        <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-slate-50 to-white">
-                             {/* Status Indicator */}
-                             <div className={`mb-8 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${
-                                 voiceStatus === 'Listening' ? 'bg-green-100 text-green-600' :
-                                 voiceStatus === 'Speaking' ? 'bg-blue-100 text-blue-600' :
-                                 voiceStatus === 'Connecting...' ? 'bg-yellow-100 text-yellow-600' :
-                                 'bg-slate-100 text-slate-500'
-                             }`}>
-                                 {voiceStatus}
-                             </div>
-
-                             {/* Visualizer Circle */}
-                             <div className="relative mb-12 group">
-                                 {/* Pulse Rings */}
-                                 {isLiveConnected && (
-                                     <>
-                                        <div className={`absolute inset-0 rounded-full opacity-20 animate-ping ${voiceStatus === 'Speaking' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
-                                        <div className={`absolute -inset-4 rounded-full opacity-10 animate-pulse ${voiceStatus === 'Speaking' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
-                                     </>
-                                 )}
-                                 
-                                 {/* Main Mic Button */}
-                                 <button 
-                                    onClick={isLiveConnected ? disconnectFromLiveAPI : connectToLiveAPI}
-                                    className={`relative w-24 h-24 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 transform hover:scale-105 ${
-                                        isLiveConnected 
-                                          ? (voiceStatus === 'Speaking' ? 'bg-blue-600' : 'bg-green-600') 
-                                          : 'bg-slate-800'
-                                    }`}
-                                 >
-                                    {isLiveConnected ? <Square className="w-8 h-8 text-white fill-current" /> : <Mic className="w-10 h-10 text-white" />}
-                                 </button>
-                             </div>
-
-                             <h2 className="text-xl font-bold text-slate-800 mb-2">
-                                 {isLiveConnected ? "Conversation Active" : "Start Voice Chat"}
-                             </h2>
-                             <p className="text-slate-500 text-sm max-w-xs mx-auto mb-8">
-                                 {isLiveConnected 
-                                    ? "Speak naturally. AgriScore AI is listening to your questions." 
-                                    : "Connect to have a real-time, hands-free conversation about your farm."}
-                             </p>
-
-                             {/* Controls */}
-                             {isLiveConnected && (
-                                 <div className="flex gap-4">
-                                     <button 
-                                       onClick={() => setIsMuted(!isMuted)}
-                                       className={`p-3 rounded-full border transition-colors ${isMuted ? 'bg-red-50 border-red-200 text-red-500' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-                                     >
-                                         {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                                     </button>
-                                     <button 
-                                        className="p-3 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-                                     >
-                                        <Volume2 className="w-5 h-5" />
-                                     </button>
-                                 </div>
-                             )}
-                        </div>
-                    )}
-                </div>
-
-                {/* Text Input (Only visible in Text Mode) */}
-                {mode === 'text' && (
-                    <div className="p-4 bg-white border-t border-slate-100">
-                        <div className="flex gap-2">
-                            <input 
-                                type="text" 
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleSendText()}
-                                placeholder="Ask about crop diseases, market prices, or weather..." 
-                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all"
-                            />
-                            <button 
-                                onClick={handleSendText}
-                                disabled={!input.trim() || isTextLoading}
-                                className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white p-3 rounded-xl transition-colors shadow-lg shadow-green-200 flex items-center justify-center"
-                            >
-                                <Send className="w-5 h-5" />
-                            </button>
-                        </div>
-                    </div>
-                )}
+               <div className="p-4 border-t border-slate-100 bg-white">
+                  <div className="flex gap-2">
+                     <input
+                        type="text"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSendText()}
+                        placeholder="Ask about crop health, soil care, or pricing"
+                        className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                     />
+                     <button
+                        onClick={handleSendText}
+                        disabled={!input.trim() || isTextLoading}
+                        className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-5 rounded-xl text-sm font-semibold shadow-lg shadow-green-100"
+                     >
+                        Send
+                     </button>
+                  </div>
+               </div>
             </Card>
-        </div>
-    );
+
+            <div className="space-y-6">
+               <Card>
+                  <h3 className="text-base font-semibold text-slate-800 mb-4">FAQ</h3>
+                  <div className="space-y-4">
+                     {faqs.map((item, idx) => (
+                        <div key={idx} className="bg-slate-50 rounded-2xl p-4">
+                           <p className="text-sm font-semibold text-slate-800">{item.question}</p>
+                           <p className="text-sm text-slate-500 mt-2 leading-relaxed">{item.answer}</p>
+                        </div>
+                     ))}
+                  </div>
+               </Card>
+
+               <Card>
+                  <h3 className="text-base font-semibold text-slate-800 mb-4">Contact Us</h3>
+                  <div className="space-y-3">
+                     {contacts.map((item, idx) => {
+                        const Icon = item.icon;
+                        return (
+                           <div key={idx} className="flex items-center gap-3">
+                              <span className="w-10 h-10 rounded-2xl bg-slate-50 text-slate-500 flex items-center justify-center">
+                                 <Icon className="w-4 h-4" />
+                              </span>
+                              <div>
+                                 <p className="text-xs uppercase tracking-wide text-slate-400">{item.label}</p>
+                                 <p className="font-semibold text-slate-800">{item.value}</p>
+                              </div>
+                           </div>
+                        );
+                     })}
+                  </div>
+                  <button className="w-full mt-6 bg-slate-900 text-white py-3 rounded-xl text-sm font-semibold hover:bg-slate-800 transition">
+                     Email Support Team
+                  </button>
+               </Card>
+            </div>
+         </div>
+      </div>
+   );
 };
 
 // Helper for Chatbot Icon
@@ -1965,29 +2927,54 @@ const SoilWater = () => {
       return acc;
   }, []);
 
-  const handleExport = () => {
-    const headers = ['Category', 'Parameter', 'Value', 'Unit', 'Additional Info'];
-    
-    const rows = [
-      ...nutrients.map(n => ['Soil Metrics', n.label, n.value, n.unit, `Trend: ${n.trend}`]),
-      ...devices.map(d => ['Device Reading', d.label, d.value, d.unit, '-']),
-      ...fieldHealth.map(f => ['Field Health', f.name, f.score, '/100', f.status]),
-      [], // spacer
-      ['Time', 'Soil Moisture (%)', 'Temperature (C)', 'pH Level', ''], // Trend headers
-      ...trendsData.map(t => [t.time, t.moisture, t.temp, t.ph, ''])
-    ];
+   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+   const exportMenuRef = useRef<HTMLDivElement>(null);
 
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + headers.join(",") + "\n" 
-      + rows.map(e => e.join(",")).join("\n");
+   useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+         if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+            setIsExportMenuOpen(false);
+         }
+      };
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "agriscore_soil_water_data.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+   }, []);
+
+   const handleExport = (type: 'live' | 'history') => {
+      if (type === 'history') {
+         const link = document.createElement('a');
+         link.href = soilHistoryUrl;
+         link.download = 'IoT_soil_data.csv';
+         document.body.appendChild(link);
+         link.click();
+         document.body.removeChild(link);
+         setIsExportMenuOpen(false);
+         return;
+      }
+
+      const headers = ['Category', 'Parameter', 'Value', 'Unit', 'Additional Info'];
+
+      const liveRows = [
+         ...nutrients.map((n) => ['Soil Metric', n.label, n.value, n.unit, `Trend: ${n.trend}`]),
+         ...devices.map((d) => ['IoT Device', d.label, d.value, d.unit, 'Live reading']),
+         ...fieldHealth.map((f) => ['Field Health', f.name, f.score, '/100', f.status]),
+      ];
+
+      const csvContent =
+         'data:text/csv;charset=utf-8,' +
+         headers.join(',') +
+         '\n' +
+         liveRows.map((e) => e.join(',')).join('\n');
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', 'agriscore_live_snapshot.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setIsExportMenuOpen(false);
   };
 
   return (
@@ -1996,12 +2983,30 @@ const SoilWater = () => {
             title="Soil & Water" 
             subtitle="Real-time monitoring and analytics" 
             action={
-                <button 
-                  onClick={handleExport}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center shadow-lg shadow-green-200 transition-colors"
-                >
-                  Export Data <Download className="w-3.5 h-3.5 ml-2" strokeWidth={2.5} />
-                </button>
+               <div className="relative" ref={exportMenuRef}>
+                  <button
+                     onClick={() => setIsExportMenuOpen((prev) => !prev)}
+                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center shadow-lg shadow-green-200 transition-colors"
+                  >
+                     Export Data <Download className="w-3.5 h-3.5 ml-2" strokeWidth={2.5} />
+                  </button>
+                  {isExportMenuOpen && (
+                     <div className="absolute right-0 mt-2 w-44 bg-white border border-slate-100 rounded-xl shadow-lg z-20 overflow-hidden">
+                        <button
+                           onClick={() => handleExport('live')}
+                           className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center justify-between"
+                        >
+                           Live data <span className="text-[11px] text-slate-400">Snapshot</span>
+                        </button>
+                        <button
+                           onClick={() => handleExport('history')}
+                           className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 flex items-center justify-between border-t border-slate-100"
+                        >
+                           Full history <span className="text-[11px] text-slate-400">ZIP export</span>
+                        </button>
+                     </div>
+                  )}
+               </div>
             }
         />
 
@@ -2249,13 +3254,13 @@ const App = () => {
       <Layout onLogout={() => setIsAuthenticated(false)}>
         <Routes>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/farms" element={<PlaceholderPage title="Crop Management" />} />
+          <Route path="/farms" element={<CropManagement />} />
           <Route path="/irrigation" element={<SoilWater />} />
           <Route path="/weather" element={<WeatherPage />} />
           <Route path="/tasks" element={<TaskManagement />} />
-          <Route path="/doctor" element={<PlaceholderPage title="Crop Doctor" />} />
-          <Route path="/reports" element={<PlaceholderPage title="Reports & Analytics" />} />
-          <Route path="/score" element={<PlaceholderPage title="AgriScore" />} />
+          <Route path="/doctor" element={<CropDoctor />} />
+          <Route path="/reports" element={<ReportsAnalytics />} />
+          <Route path="/score" element={<AgriScorePage />} />
           <Route path="/settings" element={<FarmSettings />} />
           <Route path="/account" element={<MyAccount />} />
           <Route path="/help" element={<HelpSupport />} />
