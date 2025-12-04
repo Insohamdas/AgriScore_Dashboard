@@ -3,6 +3,7 @@ import {
   UserRole, DeviceStatus, SensorType, AlertSeverity, IrrigationStatus,
   Task, HarvestItem
 } from '../types';
+import { fetchCollection, fetchValue, isFirebaseEnabled } from './firebaseClient';
 
 // --- Data Generators ---
 
@@ -110,18 +111,50 @@ export const MOCK_HARVEST: HarvestItem[] = [
   { id: 3, name: 'Corn', amount: 200, unit: 'tons', color: 'bg-yellow-100 text-yellow-600' },
 ];
 
+// --- Firebase Helpers ---
+
+const withCollectionFallback = async <T extends Record<string, unknown>>(path: string, fallback: T[]): Promise<T[]> => {
+  if (!isFirebaseEnabled) return fallback;
+  const data = await fetchCollection<T>(path);
+  return data && data.length ? data : fallback;
+};
+
+const withValueFallback = async <T>(path: string, fallback: T): Promise<T> => {
+  if (!isFirebaseEnabled) return fallback;
+  const data = await fetchValue<T>(path);
+  return (data ?? fallback) as T;
+};
+
 // --- API Facade ---
 
 export const api = {
-  getFarms: () => Promise.resolve(MOCK_FARMS),
-  getFarmById: (id: number) => Promise.resolve(MOCK_FARMS.find(f => f.farm_id === id)),
-  getFieldsByFarm: (farmId: number) => Promise.resolve(MOCK_FIELDS.filter(f => f.farm_id === farmId)),
-  getDevicesByField: (fieldId: number) => Promise.resolve(MOCK_DEVICES.filter(d => d.field_id === fieldId)),
-  getSensorsByDevice: (deviceId: number) => Promise.resolve(MOCK_SENSORS.filter(s => s.device_id === deviceId)),
-  getReadings: (sensorId: number) => Promise.resolve(ALL_READINGS[sensorId] || []),
-  getAlerts: () => Promise.resolve(MOCK_ALERTS),
-  getIrrigationEvents: () => Promise.resolve(MOCK_IRRIGATION),
-  getUser: () => Promise.resolve(MOCK_USER),
-  getTasks: () => Promise.resolve(MOCK_TASKS),
-  getHarvestSummary: () => Promise.resolve(MOCK_HARVEST),
+  getFarms: () => withCollectionFallback<Farm>('farms', MOCK_FARMS),
+  getFarmById: async (id: number) => {
+    const farms = await withCollectionFallback<Farm>('farms', MOCK_FARMS);
+    return farms.find(f => f.farm_id === id);
+  },
+  getFieldsByFarm: async (farmId: number) => {
+    const fields = await withCollectionFallback<Field>('fields', MOCK_FIELDS);
+    return fields.filter(f => f.farm_id === farmId);
+  },
+  getDevicesByField: async (fieldId: number) => {
+    const devices = await withCollectionFallback<Device>('devices', MOCK_DEVICES);
+    return devices.filter(d => d.field_id === fieldId);
+  },
+  getSensorsByDevice: async (deviceId: number) => {
+    const sensors = await withCollectionFallback<Sensor>('sensors', MOCK_SENSORS);
+    return sensors.filter(s => s.device_id === deviceId);
+  },
+  getReadings: async (sensorId: number) => {
+    if (isFirebaseEnabled) {
+      const firebaseReadings = await fetchCollection<Reading>(`readings/${sensorId}`);
+      if (firebaseReadings && firebaseReadings.length) return firebaseReadings;
+    }
+    return ALL_READINGS[sensorId] || [];
+  },
+  getAlerts: () => withCollectionFallback<Alert>('alerts', MOCK_ALERTS),
+  getIrrigationEvents: () => withCollectionFallback<IrrigationEvent>('irrigation', MOCK_IRRIGATION),
+  getUser: () => withValueFallback<User>('user', MOCK_USER),
+  getTasks: () => withCollectionFallback<Task>('tasks', MOCK_TASKS),
+  getHarvestSummary: () => withCollectionFallback<HarvestItem>('harvest', MOCK_HARVEST),
 };
