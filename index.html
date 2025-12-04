@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AgriScore</title>
-    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -36,8 +37,23 @@
       }
     </script>
     <style>
+      * {
+        box-sizing: border-box;
+      }
       body {
         font-family: 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+      /* Fix text clipping in webkit browsers */
+      h1, h2, h3, h4, h5, h6, p, span, div {
+        overflow: visible;
+      }
+      /* Fix gradient text clipping */
+      [class*="bg-clip-text"] {
+        padding: 0.1em 0;
+        margin: -0.1em 0;
       }
       /* Custom scrollbar for webkit */
       ::-webkit-scrollbar {
@@ -207,6 +223,9 @@
         text-align: center !important;
         margin-bottom: 4px !important;
         letter-spacing: -0.02em !important;
+        padding: 2px 0 !important;
+        line-height: 1.3 !important;
+        overflow: visible !important;
       }
       .cl-headerSubtitle {
         font-size: 13px !important;

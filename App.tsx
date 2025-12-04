@@ -308,13 +308,13 @@ const LoginPage = () => {
             </div>
             
             {/* Main Heading */}
-            <h1 className="text-[2.75rem] font-bold mb-4 leading-[1.1] tracking-tight">
-              <span className="bg-gradient-to-r from-white via-green-100 to-white bg-clip-text text-transparent bg-[length:200%_auto]" style={{animation: 'shimmer 3s linear infinite'}}>Grow Smarter,</span>{' '}
+            <h1 className="text-[2.75rem] font-bold mb-4 leading-[1.2] tracking-tight overflow-visible">
+              <span className="inline-block pb-1 bg-gradient-to-r from-white via-green-100 to-white bg-clip-text text-transparent bg-[length:200%_auto]" style={{animation: 'shimmer 3s linear infinite'}}>Grow Smarter,</span>{' '}
               <span className="relative block mt-1">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-300 to-teal-400 bg-[length:200%_auto]" style={{animation: 'gradient 4s ease infinite'}}>
+                <span className="inline-block pb-1 text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-300 to-teal-400 bg-[length:200%_auto]" style={{animation: 'gradient 4s ease infinite'}}>
                   Harvest More
                 </span>
-                <svg className="absolute -bottom-1 left-0 w-full" height="6" viewBox="0 0 200 8" fill="none">
+                <svg className="absolute -bottom-0 left-0 w-full" height="6" viewBox="0 0 200 8" fill="none">
                   <path d="M1 5.5C47.6667 2.16667 141 -2.4 199 5.5" stroke="url(#gradient)" strokeWidth="3" strokeLinecap="round"/>
                   <defs><linearGradient id="gradient" x1="0" y1="0" x2="200" y2="0"><stop stopColor="#4ade80"/><stop offset="1" stopColor="#2dd4bf"/></linearGradient></defs>
                 </svg>
