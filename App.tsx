@@ -3356,45 +3356,59 @@ const PlaceholderPage = ({ title }: { title: string }) => (
   </div>
 );
 
-const App = () => {
-  const { isSignedIn, isLoaded } = useUser();
-  const { signOut } = useClerk();
+const CLERK_ENABLED = Boolean(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
 
-  // Show loading state while Clerk loads
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-600 font-medium">Loading AgriScore...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isSignedIn) {
-    return <LoginPage />;
-  }
-
-  return (
-    <HashRouter>
-      <Layout onLogout={() => signOut()}>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/farms" element={<CropManagement />} />
-          <Route path="/irrigation" element={<SoilWater />} />
-          <Route path="/weather" element={<WeatherPage />} />
-          <Route path="/tasks" element={<TaskManagement />} />
-          <Route path="/doctor" element={<CropDoctor />} />
-          <Route path="/reports" element={<ReportsAnalytics />} />
-          <Route path="/score" element={<AgriScorePage />} />
-          <Route path="/settings" element={<FarmSettings />} />
-          <Route path="/account" element={<MyAccount />} />
-          <Route path="/help" element={<HelpSupport />} />
-        </Routes>
+const ApplicationShell = ({ onLogout }: { onLogout: () => void }) => (
+   <HashRouter>
+      <Layout onLogout={onLogout}>
+         <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/farms" element={<CropManagement />} />
+            <Route path="/irrigation" element={<SoilWater />} />
+            <Route path="/weather" element={<WeatherPage />} />
+            <Route path="/tasks" element={<TaskManagement />} />
+            <Route path="/doctor" element={<CropDoctor />} />
+            <Route path="/reports" element={<ReportsAnalytics />} />
+            <Route path="/score" element={<AgriScorePage />} />
+            <Route path="/settings" element={<FarmSettings />} />
+            <Route path="/account" element={<MyAccount />} />
+            <Route path="/help" element={<HelpSupport />} />
+         </Routes>
       </Layout>
-    </HashRouter>
-  );
+   </HashRouter>
+);
+
+const ClerkGate = () => {
+   const { isSignedIn, isLoaded } = useUser();
+   const { signOut } = useClerk();
+
+   if (!isLoaded) {
+      return (
+         <div className="min-h-screen flex items-center justify-center bg-slate-50">
+            <div className="flex flex-col items-center gap-4">
+               <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+               <p className="text-slate-600 font-medium">Loading AgriScore...</p>
+            </div>
+         </div>
+      );
+   }
+
+   if (!isSignedIn) {
+      return <LoginPage />;
+   }
+
+   return <ApplicationShell onLogout={() => signOut()} />;
+};
+
+const App = () => {
+   if (!CLERK_ENABLED) {
+      if (typeof window !== 'undefined') {
+         console.warn('[AgriScore] Clerk publishable key missing. Running without authentication.');
+      }
+      return <ApplicationShell onLogout={() => window.location.reload()} />;
+   }
+
+   return <ClerkGate />;
 };
 
 export default App;
