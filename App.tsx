@@ -3356,7 +3356,10 @@ const PlaceholderPage = ({ title }: { title: string }) => (
   </div>
 );
 
-const CLERK_ENABLED = Boolean(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
+const CLERK_ENV_VALUE = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const CLERK_ENABLED = Boolean(CLERK_ENV_VALUE);
+console.log('[AgriScore] Clerk env value:', CLERK_ENV_VALUE);
+console.log('[AgriScore] CLERK_ENABLED:', CLERK_ENABLED);
 
 const ApplicationShell = ({ onLogout }: { onLogout: () => void }) => (
    <HashRouter>
