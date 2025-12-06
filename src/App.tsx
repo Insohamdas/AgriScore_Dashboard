@@ -15,6 +15,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
 import { GoogleGenAI } from "@google/genai";
 import { api } from './services/mockDataService';
+import { useProfile } from './hooks/useAuth';
 import { Farm, Field, Device, Sensor, Reading, Alert, IrrigationEvent, DeviceStatus, AlertSeverity, SensorType, Task, HarvestItem, User } from './types';
 
 const soilHistoryUrl = new URL('./assets/data/IoT_soil_data.csv', import.meta.url).href;
@@ -112,7 +113,9 @@ const MiniGauge = ({ value, max, color, track, size = 80, strokeWidth = 8, child
 
 const Layout: React.FC<{ children: React.ReactNode; onLogout: () => void }> = ({ children, onLogout }) => {
    const location = useLocation();
+   const navigate = useNavigate();
    const [isMobileOpen, setIsMobileOpen] = useState(false);
+   const { userName, userEmail, userAvatar } = useProfile();
 
    const navItems = [
       { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -204,15 +207,22 @@ const Layout: React.FC<{ children: React.ReactNode; onLogout: () => void }> = ({
                      <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
                   </button>
 
-                  <div className="flex items-center pl-2">
-                     <div className="w-9 h-9 rounded-full bg-orange-400 flex items-center justify-center text-white font-bold text-xs shadow-sm ring-2 ring-white">
-                        MK
-                     </div>
+                  <button 
+                     onClick={() => navigate('/account')}
+                     className="flex items-center pl-2 cursor-pointer hover:opacity-80 transition-opacity"
+                  >
+                     {userAvatar ? (
+                       <img src={userAvatar} alt={userName} className="w-9 h-9 rounded-full object-cover shadow-sm ring-2 ring-white" />
+                     ) : (
+                       <div className="w-9 h-9 rounded-full bg-orange-400 flex items-center justify-center text-white font-bold text-xs shadow-sm ring-2 ring-white">
+                          {userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                       </div>
+                     )}
                      <div className="ml-3 hidden md:block">
-                        <p className="text-sm font-semibold text-slate-900 leading-tight">Manish Kumar</p>
-                        <p className="text-[11px] text-slate-400">kmanish45@gmail.com</p>
+                        <p className="text-sm font-semibold text-slate-900 leading-tight">{userName}</p>
+                        <p className="text-[11px] text-slate-400">{userEmail}</p>
                      </div>
-                  </div>
+                  </button>
                </div>
             </header>
 
@@ -229,12 +239,33 @@ const Layout: React.FC<{ children: React.ReactNode; onLogout: () => void }> = ({
 const Dashboard = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [harvest, setHarvest] = useState<HarvestItem[]>([]);
-   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
-   const exportMenuRef = useRef<HTMLDivElement>(null);
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+  const [greeting, setGreeting] = useState('Good Morning');
+  const exportMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     api.getTasks().then(setTasks);
     api.getHarvestSummary().then(setHarvest);
+  }, []);
+
+  // Set time-based greeting
+  useEffect(() => {
+    const updateGreeting = () => {
+      const hour = new Date().getHours();
+      if (hour >= 5 && hour < 12) {
+        setGreeting('Good Morning');
+      } else if (hour >= 12 && hour < 17) {
+        setGreeting('Good Afternoon');
+      } else if (hour >= 17 && hour < 21) {
+        setGreeting('Good Evening');
+      } else {
+        setGreeting('Good Night');
+      }
+    };
+    
+    updateGreeting();
+    const timer = setInterval(updateGreeting, 60000); // Update every minute
+    return () => clearInterval(timer);
   }, []);
 
    useEffect(() => {
@@ -308,7 +339,7 @@ const Dashboard = () => {
     <div className="space-y-7">
       {/* Page Header */}
       <SectionHeader 
-        title="Good Morning !" 
+        title={`${greeting} !`}
         subtitle="Optimize Your Farm Operations with Real-Time Insights"
         action={
           <div className="flex items-center space-x-3">
@@ -2008,9 +2039,10 @@ const FarmSettings = () => {
                    </div>
                    <div className="pt-2 border-t border-slate-100">
                       <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Timezone</label>
-                      <select className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm">
+                      <select value={preferences.timezone} onChange={(e) => setPreferences(prev => ({ ...prev, timezone: e.target.value }))} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm">
                          <option>IST (GMT+05:30)</option>
                          <option>UTC (GMT+00:00)</option>
+                         <option>EST (GMT-05:00)</option>
                       </select>
                    </div>
                 </div>
@@ -2085,6 +2117,54 @@ const MyAccount = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [commPrefs, setCommPrefs] = useState({ alerts: true, advisory: false, whatsapp: true });
   const [securityPrefs, setSecurityPrefs] = useState({ twoFactor: true, biometrics: false, loginAlerts: true });
+  const { profile, updateProfile, uploadAvatar, userName, userEmail, userAvatar } = useProfile();
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [location, setLocation] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [farmName, setFarmName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+  const [preferences, setPreferences] = useState({
+    autoIrrigation: true,
+    darkMode: false,
+    timezone: 'IST (GMT+05:30)',
+    language: 'English (India)',
+    preferredContactTime: '08:00 – 12:00 IST'
+  });
+
+  // Sync profile data to form inputs
+  useEffect(() => {
+    if (profile) {
+      setFullName(profile.full_name || '');
+      setEmail(profile.email || '');
+      setPhone(profile.phone || '');
+      setLocation(profile.location || '');
+      setAvatarUrl(profile.avatar_url || '');
+      setFarmName(profile.farm_name || '');
+      
+      setCommPrefs({
+        alerts: profile.alerts_enabled ?? true,
+        advisory: profile.advisory_enabled ?? false,
+        whatsapp: profile.whatsapp_enabled ?? true
+      });
+      
+      setSecurityPrefs({
+        twoFactor: profile.two_factor_enabled ?? false,
+        biometrics: profile.biometrics_enabled ?? false,
+        loginAlerts: profile.login_alerts_enabled ?? true
+      });
+      
+      setPreferences({
+        autoIrrigation: profile.auto_irrigation ?? true,
+        darkMode: profile.dark_mode ?? false,
+        timezone: profile.timezone || 'IST (GMT+05:30)',
+        language: profile.language || 'English (India)',
+        preferredContactTime: profile.preferred_contact_time || '08:00 – 12:00 IST'
+      });
+    }
+  }, [profile]);
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: UserIcon },
@@ -2137,6 +2217,88 @@ const MyAccount = () => {
      { key: 'whatsapp', label: 'WhatsApp updates', desc: 'Weather nudges & ticket updates' },
   ];
 
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    setSaveMessage('');
+    const { error } = await updateProfile({
+      full_name: fullName,
+      email,
+      phone,
+      location,
+      farm_name: farmName,
+      alerts_enabled: commPrefs.alerts,
+      advisory_enabled: commPrefs.advisory,
+      whatsapp_enabled: commPrefs.whatsapp,
+      two_factor_enabled: securityPrefs.twoFactor,
+      biometrics_enabled: securityPrefs.biometrics,
+      login_alerts_enabled: securityPrefs.loginAlerts,
+      auto_irrigation: preferences.autoIrrigation,
+      dark_mode: preferences.darkMode,
+      timezone: preferences.timezone,
+      language: preferences.language,
+      preferred_contact_time: preferences.preferredContactTime
+    });
+    if (error) {
+      setSaveMessage(`Error: ${error}`);
+    } else {
+      setSaveMessage('Profile saved successfully!');
+      setTimeout(() => setSaveMessage(''), 3000);
+    }
+    setSaving(false);
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSaving(true);
+    const { url, error } = await uploadAvatar(file);
+    if (error) {
+      setSaveMessage(`Error uploading image: ${error}`);
+    } else {
+      setAvatarUrl(url || '');
+      setSaveMessage('Profile picture uploaded successfully!');
+      setTimeout(() => setSaveMessage(''), 3000);
+    }
+    setSaving(false);
+  };
+
+  // Auto-save profile changes with debounce
+  useEffect(() => {
+    if (!profile) return; // Don't auto-save if profile not loaded yet
+
+    const timer = setTimeout(() => {
+      if (
+        fullName !== profile.full_name ||
+        email !== profile.email ||
+        phone !== profile.phone ||
+        location !== profile.location ||
+        farmName !== profile.farm_name ||
+        JSON.stringify(commPrefs) !== JSON.stringify({
+          alerts: profile.alerts_enabled,
+          advisory: profile.advisory_enabled,
+          whatsapp: profile.whatsapp_enabled
+        }) ||
+        JSON.stringify(securityPrefs) !== JSON.stringify({
+          twoFactor: profile.two_factor_enabled,
+          biometrics: profile.biometrics_enabled,
+          loginAlerts: profile.login_alerts_enabled
+        }) ||
+        JSON.stringify(preferences) !== JSON.stringify({
+          autoIrrigation: profile.auto_irrigation,
+          darkMode: profile.dark_mode,
+          timezone: profile.timezone,
+          language: profile.language,
+          preferredContactTime: profile.preferred_contact_time
+        })
+      ) {
+        handleSaveProfile();
+      }
+    }, 2000); // Auto-save after 2 seconds of inactivity
+
+    return () => clearTimeout(timer);
+  }, [fullName, email, phone, location, farmName, commPrefs, securityPrefs, preferences]);
+
   return (
     <div className="max-w-6xl mx-auto space-y-8">
        <SectionHeader title="My Account" subtitle="Manage your personal details and account settings" />
@@ -2180,28 +2342,30 @@ const MyAccount = () => {
                       <div className="flex items-start justify-between mb-8">
                          <div className="flex items-center gap-6">
                             <div className="relative">
-                               <div className="w-24 h-24 rounded-full bg-orange-100 flex items-center justify-center text-3xl font-bold text-orange-500 border-4 border-white shadow-lg">MK</div>
-                               <button className="absolute bottom-0 right-0 p-2 bg-slate-800 text-white rounded-full hover:bg-slate-700 shadow-md transition-colors">
+                               {avatarUrl ? (
+                                 <img src={avatarUrl} alt="Profile" className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg" />
+                               ) : (
+                                 <div className="w-24 h-24 rounded-full bg-orange-100 flex items-center justify-center text-3xl font-bold text-orange-500 border-4 border-white shadow-lg">
+                                    {fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                                 </div>
+                               )}
+                               <label className="absolute bottom-0 right-0 p-2 bg-slate-800 text-white rounded-full hover:bg-slate-700 shadow-md transition-colors cursor-pointer">
                                   <Camera className="w-4 h-4" />
-                               </button>
+                                  <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" disabled={saving} />
+                               </label>
                             </div>
                             <div>
-                               <h2 className="text-xl font-bold text-slate-900">Manish Kumar</h2>
-                               <p className="text-slate-500 text-sm">Farmer • Green Valley Estates</p>
+                               <h2 className="text-xl font-bold text-slate-900">{fullName || 'Your Name'}</h2>
+                               <p className="text-slate-500 text-sm">{location || 'Your Location'}</p>
                                <div className="flex flex-wrap items-center gap-2 mt-2">
                                   <span className="px-2 py-1 bg-green-50 text-green-700 text-[10px] font-bold uppercase rounded-md flex items-center border border-green-100">
-                                     <BadgeCheck className="w-3 h-3 mr-1" /> Kisan ID Verified
+                                     <BadgeCheck className="w-3 h-3 mr-1" /> Profile Updated
                                   </span>
-                                  <span className="text-xs text-slate-400">Joined Jan 2023</span>
+                                  {profile?.created_at && (
+                                    <span className="text-xs text-slate-400">Joined {new Date(profile.created_at).toLocaleDateString()}</span>
+                                  )}
                                </div>
                             </div>
-                         </div>
-                         <div className="text-right hidden md:block">
-                            <div className="text-sm font-bold text-slate-700 mb-1">Profile Strength</div>
-                            <div className="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
-                               <div className="h-full bg-green-500 w-[85%] rounded-full"></div>
-                            </div>
-                            <div className="text-xs text-green-600 font-bold mt-1">85% Complete</div>
                          </div>
                       </div>
 
@@ -2220,21 +2384,21 @@ const MyAccount = () => {
                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Full Name</label>
                                <div className="relative">
                                   <UserIcon className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                                  <input type="text" defaultValue="Manish Kumar" className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
+                                  <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
                                </div>
                             </div>
                             <div>
                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Email Address</label>
                                <div className="relative">
                                   <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                                  <input type="email" defaultValue="kmanish45@gmail.com" className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
+                                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
                                </div>
                             </div>
                             <div>
                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Phone Number</label>
                                <div className="relative">
                                   <Phone className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                                  <input type="tel" defaultValue="+91 98765 43210" className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
+                                  <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
                                </div>
                             </div>
                          </div>
@@ -2243,14 +2407,21 @@ const MyAccount = () => {
                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Location</label>
                                <div className="relative">
                                   <MapPin className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                                  <input type="text" defaultValue="Agarpara, India" className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
+                                  <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
+                               </div>
+                            </div>
+                            <div>
+                               <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Farm Name</label>
+                               <div className="relative">
+                                  <Sprout className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                                  <input type="text" value={farmName} onChange={(e) => setFarmName(e.target.value)} className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
                                </div>
                             </div>
                             <div>
                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Language</label>
                                <div className="relative">
                                   <Globe className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                                  <select className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all appearance-none">
+                                  <select value={preferences.language} onChange={(e) => setPreferences(prev => ({ ...prev, language: e.target.value }))} className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all appearance-none">
                                      <option>English (India)</option>
                                      <option>Hindi</option>
                                      <option>Punjabi</option>
@@ -2259,7 +2430,7 @@ const MyAccount = () => {
                             </div>
                             <div>
                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Preferred contact time</label>
-                               <select className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:border-green-500 focus:ring-2 focus:ring-green-500/20">
+                               <select value={preferences.preferredContactTime} onChange={(e) => setPreferences(prev => ({ ...prev, preferredContactTime: e.target.value }))} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:border-green-500 focus:ring-2 focus:ring-green-500/20">
                                   <option>08:00 – 12:00 IST</option>
                                   <option>12:00 – 16:00 IST</option>
                                   <option>16:00 – 20:00 IST</option>
@@ -2288,9 +2459,23 @@ const MyAccount = () => {
                          ))}
                       </div>
 
-                      <div className="mt-8 flex justify-end">
-                         <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-green-200 transition-colors flex items-center">
-                            <Save className="w-4 h-4 mr-2" /> Save Changes
+                      <div className="mt-8 flex justify-between items-center">
+                         {saveMessage && (
+                           <p className={`text-sm font-semibold ${saveMessage.includes('Error') ? 'text-red-600' : 'text-green-600'}`}>
+                             {saveMessage}
+                           </p>
+                         )}
+                         <button 
+                           onClick={handleSaveProfile}
+                           disabled={saving}
+                           className="ml-auto bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-green-200 transition-colors flex items-center"
+                         >
+                           {saving ? (
+                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                           ) : (
+                             <Save className="w-4 h-4 mr-2" />
+                           )}
+                           Save Changes
                          </button>
                       </div>
                    </Card>
@@ -2328,9 +2513,27 @@ const MyAccount = () => {
                                   <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">{doc.status}</span>
                                </div>
                             ))}
-                            <button className="mt-2 text-xs font-bold text-green-600 flex items-center">
+                            <button onClick={() => document.getElementById('doc-upload')?.click()} className="mt-2 text-xs font-bold text-green-600 flex items-center hover:text-green-700">
                                <Upload className="w-4 h-4 mr-1" /> Upload new document
                             </button>
+                            <input 
+                               id="doc-upload" 
+                               type="file" 
+                               className="hidden" 
+                               onChange={async (e) => {
+                                 const file = e.target.files?.[0];
+                                 if (file && profile) {
+                                   try {
+                                     const fileName = `${Date.now()}_${file.name}`;
+                                     const { error } = await supabase.storage.from('documents').upload(`${profile.id}/${fileName}`, file);
+                                     if (error) throw error;
+                                     alert('Document uploaded successfully!');
+                                   } catch (err) {
+                                     alert('Failed to upload document: ' + (err instanceof Error ? err.message : 'Unknown error'));
+                                   }
+                                 }
+                               }}
+                            />
                          </div>
                       </Card>
 
@@ -2403,7 +2606,13 @@ const MyAccount = () => {
                 <Card>
                    <div className="flex justify-between items-center mb-6">
                       <h3 className="font-bold text-slate-800">Team Members</h3>
-                      <button className="bg-green-50 text-green-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-100 transition-colors flex items-center">
+                      <button onClick={() => {
+                        const email = prompt('Enter team member email:');
+                        const role = prompt('Enter role (Owner, Agronomist, Viewer):', 'Agronomist');
+                        if (email && role) {
+                          alert(`Invitation sent to ${email} with role: ${role}\n\nNote: This is a demo. In production, this would send an email.`);
+                        }
+                      }} className="bg-green-50 text-green-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-100 transition-colors flex items-center">
                          <Plus className="w-3.5 h-3.5 mr-1" /> Invite Member
                       </button>
                    </div>
@@ -2425,7 +2634,11 @@ const MyAccount = () => {
                             </div>
                             <div className="flex items-center gap-4">
                                <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded">{member.role}</span>
-                               <button className="text-slate-300 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                               <button onClick={() => {
+                                 if (confirm(`Remove ${member.name} from team?`)) {
+                                   alert(`${member.name} has been removed from the team.`);
+                                 }
+                               }} className="text-slate-300 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
                             </div>
                          </div>
                       ))}

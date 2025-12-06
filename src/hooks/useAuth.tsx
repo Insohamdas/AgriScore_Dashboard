@@ -10,6 +10,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
+  signInWithGoogle: () => Promise<{ error: AuthError | null }>;
+  signInWithFacebook: () => Promise<{ error: AuthError | null }>;
   isConfigured: boolean;
 }
 
@@ -45,21 +47,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [isConfigured]);
 
   const signUp = async (email: string, password: string, name: string) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { full_name: name }
       }
     });
+    // Upsert profile if signup successful
+    if (!error && data.user) {
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        full_name: name,
+        email: data.user.email
+      });
+    }
     return { error };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
+    // Upsert profile if login successful, but do not overwrite name with blank
+    if (!error && data.user) {
+      let full_name = data.user.user_metadata?.full_name;
+      if (!full_name) {
+        // Fetch existing profile to preserve name
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', data.user.id)
+          .single();
+        full_name = profile?.full_name || '';
+      }
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        full_name,
+        email: data.user.email
+      });
+    }
     return { error };
   };
 
@@ -74,8 +102,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error };
   };
 
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+        queryParams: {
+          prompt: 'consent'
+        }
+      }
+    });
+    return { error };
+  };
+
+  const signInWithFacebook = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'facebook',
+      options: {
+        redirectTo: window.location.origin,
+        queryParams: {
+          display: 'popup'
+        }
+      }
+    });
+    return { error };
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, resetPassword, isConfigured }}>
+    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, resetPassword, signInWithGoogle, signInWithFacebook, isConfigured }}>
       {children}
     </AuthContext.Provider>
   );
@@ -88,3 +142,7 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// Re-export useProfile for convenience
+export { useProfile } from './useProfile';
+export type { UserProfile } from './useProfile';
