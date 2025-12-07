@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Eye, EyeOff, AlertCircle, CheckCircle2, ArrowRight, Leaf } from 'lucide-react';
+import { Lock, Eye, EyeOff, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { ThreeBackground } from './ThreeBackground';
 
@@ -45,8 +45,8 @@ export const ResetPasswordPage: React.FC = () => {
           window.location.href = window.location.origin;
         }, 3000);
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }

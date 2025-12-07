@@ -115,7 +115,7 @@ export interface Task {
   id: number;
   name: string;
   date: string;
-  status: 'Pending' | 'In Progress' | 'Completed';
+  status: 'Pending' | 'In Progress' | 'Completed' | 'Scheduled';
 }
 
 export interface HarvestItem {
