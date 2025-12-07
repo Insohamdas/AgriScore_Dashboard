@@ -16,6 +16,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { GoogleGenAI } from "@google/genai";
 import { api } from './services/mockDataService';
 import { useProfile } from './hooks/useAuth';
+import { supabase } from './lib/supabase';
 import { Farm, Field, Device, Sensor, Reading, Alert, IrrigationEvent, DeviceStatus, AlertSeverity, SensorType, Task, HarvestItem, User } from './types';
 
 const soilHistoryUrl = new URL('./assets/data/IoT_soil_data.csv', import.meta.url).href;
@@ -1976,6 +1977,9 @@ const FarmSettings = () => {
       notifications: true,
       autoIrrigation: false,
       darkMode: false,
+      timezone: 'IST (GMT+05:30)',
+      contactTime: '09:00',
+      language: 'English',
    });
 
   const devices = [
