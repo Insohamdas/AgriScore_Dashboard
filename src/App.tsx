@@ -2792,175 +2792,214 @@ const MyAccount = () => {
 };
 
 const HelpSupport = () => {
-   const [messages, setMessages] = useState<{role: 'user' | 'model', text: string}[]>([
-      { role: 'model', text: 'Hi! I am your AgriScore assistant. Ask me anything about crops, soil, or weather.' }
-   ]);
-   const [input, setInput] = useState('');
-   const [isTextLoading, setIsTextLoading] = useState(false);
-   const chatEndRef = useRef<HTMLDivElement>(null);
+   const [activeTab, setActiveTab] = useState<'docs' | 'faq' | 'contact'>('docs');
+   const [expandedFaq, setExpandedFaq] = useState<number | null>(0);
+
+   const docs = [
+      { 
+         icon: Sprout, 
+         title: 'Getting Started', 
+         description: 'Learn the basics of AgriScore',
+         items: ['Dashboard overview', 'Setting up devices', 'First readings']
+      },
+      { 
+         icon: Droplets, 
+         title: 'Soil & Water', 
+         description: 'Optimize moisture and nutrients',
+         items: ['Soil health scoring', 'Irrigation planning', 'Nutrient management']
+      },
+      { 
+         icon: Cloud, 
+         title: 'Weather & Alerts', 
+         description: 'Weather forecasting & notifications',
+         items: ['Weather forecasts', 'Alert settings', 'Crop recommendations']
+      },
+      { 
+         icon: BarChart2, 
+         title: 'Analytics', 
+         description: 'Track performance & insights',
+         items: ['Reading analytics', 'Yield predictions', 'Historical data']
+      },
+   ];
 
    const faqs = [
-      { question: 'How do I improve my AgriScore?', answer: 'Review soil moisture, nutrient balance, and device health daily. Small adjustments every week keep the score high.' },
-      { question: 'Can I get weather alerts?', answer: 'Enable notifications in Settings → Weather. You will get SMS and app alerts for rain, wind, and heat spikes.' },
-      { question: 'Where is my soil report?', answer: 'Open the Soil & Water tab and tap Export. You can download the full CSV anytime.' }
+      { 
+         question: 'How do I improve my AgriScore?',
+         answer: 'Monitor your soil moisture levels weekly, maintain optimal nutrient balance, and ensure all IoT devices are functioning properly. Regular small adjustments compound to maintain high scores.'
+      },
+      { 
+         question: 'Can I export my farm data?',
+         answer: 'Yes! Go to any dashboard section and click the Export button. Choose PDF or Excel format. Your data includes soil readings, weather history, and yield predictions.'
+      },
+      { 
+         question: 'How often are readings updated?',
+         answer: 'IoT sensors push data every 15 minutes. Weather data updates hourly. All analytics refresh in real-time on your dashboard.'
+      },
+      { 
+         question: 'What do I do if a device goes offline?',
+         answer: 'Check device battery and WiFi connection. You can manage devices in Settings → IoT Devices. We send alerts when devices are offline for 30+ minutes.'
+      },
+      { 
+         question: 'Is my farm data secure?',
+         answer: 'All data is encrypted in transit and at rest. We comply with agricultural data privacy standards and never share your data with third parties.'
+      },
    ];
 
    const contacts = [
-      { label: 'Email', value: 'support@agriscore.in', icon: Mail },
-      { label: 'Phone', value: '+91 98765 43210', icon: Phone },
-      { label: 'Hours', value: 'Mon–Sat • 8am–8pm IST', icon: Clock },
+      { label: 'Email', value: 'support@agriscore.in', icon: Mail, action: () => window.location.href = 'mailto:support@agriscore.in' },
+      { label: 'Phone', value: '+91 98765 43210', icon: Phone, action: () => alert('Call support: +91 98765 43210') },
+      { label: 'Live Chat', value: 'Available 8am-8pm IST', icon: MessageSquare, action: () => alert('Opening live chat...') },
    ];
 
-   useEffect(() => {
-      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-   }, [messages]);
-
-   const handleSendText = async () => {
-      if (!input.trim()) return;
-      const userMsg = input;
-      setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
-      setInput('');
-      setIsTextLoading(true);
-
-      try {
-         const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-         if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-            throw new Error('Gemini API Key missing. Please set VITE_GEMINI_API_KEY in your .env.local file.');
-         }
-
-         const ai = new GoogleGenAI({ apiKey });
-
-         const contents = messages.map(m => ({
-            role: m.role === 'user' ? 'user' : 'model',
-            parts: [{ text: m.text }]
-         }));
-
-         contents.push({
-            role: 'user',
-            parts: [{ text: userMsg }]
-         });
-
-         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents,
-            config: {
-               systemInstruction: 'You are an expert agricultural assistant helping farmers with crop management, soil health, weather patterns, and farm operations. Provide practical, actionable advice.'
-            }
-         });
-
-         const text = response.text || 'No response received';
-         setMessages(prev => [...prev, { role: 'model', text }]);
-      } catch (error: any) {
-         console.error('Text chat error:', error);
-         const errorMsg = error.message || 'Error connecting to AI.';
-         setMessages(prev => [...prev, { role: 'model', text: `Error: ${errorMsg}` }]);
-      } finally {
-         setIsTextLoading(false);
-      }
-   };
-
    return (
-      <div className="space-y-6">
-         <SectionHeader title="Help & Support" subtitle="Chat with us, read quick answers, or reach out directly." />
-         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 h-[calc(100vh-180px)]">
-            <Card className="xl:col-span-2 h-full flex flex-col p-0">
-               <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                     <div className="w-12 h-12 rounded-full bg-green-50 text-green-600 flex items-center justify-center">
-                        <SparklesIcon className="w-6 h-6" />
+      <div className="space-y-8 pb-8">
+         <div>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">Help & Support</h1>
+            <p className="text-slate-500">Get answers, explore documentation, or reach our support team</p>
+         </div>
+
+         {/* Tab Navigation */}
+         <div className="flex gap-1 bg-slate-50 p-1 rounded-xl w-fit">
+            {[
+               { id: 'docs', label: 'Documentation' },
+               { id: 'faq', label: 'FAQ' },
+               { id: 'contact', label: 'Contact' }
+            ].map(tab => (
+               <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                     activeTab === tab.id
+                        ? 'bg-white text-slate-900 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                  }`}
+               >
+                  {tab.label}
+               </button>
+            ))}
+         </div>
+
+         {/* Documentation Tab */}
+         {activeTab === 'docs' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               {docs.map((doc, idx) => {
+                  const Icon = doc.icon;
+                  return (
+                     <div
+                        key={idx}
+                        className="group p-6 rounded-2xl border border-slate-100 bg-white hover:border-slate-200 hover:shadow-lg transition-all cursor-pointer"
+                     >
+                        <div className="flex items-start gap-4 mb-4">
+                           <div className="w-12 h-12 rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center group-hover:bg-green-50 group-hover:text-green-600 transition-colors">
+                              <Icon className="w-6 h-6" />
+                           </div>
+                           <div className="flex-1">
+                              <h3 className="text-base font-semibold text-slate-900">{doc.title}</h3>
+                              <p className="text-xs text-slate-500 mt-0.5">{doc.description}</p>
+                           </div>
+                        </div>
+                        <ul className="space-y-2">
+                           {doc.items.map((item, i) => (
+                              <li key={i} className="flex items-center gap-2 text-sm text-slate-600">
+                                 <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                                 {item}
+                              </li>
+                           ))}
+                        </ul>
+                        <button className="mt-4 text-sm font-semibold text-green-600 hover:text-green-700 flex items-center gap-2 group/btn">
+                           Read more
+                           <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                        </button>
                      </div>
-                     <div>
-                        <p className="text-sm font-semibold text-slate-800">AgriScore Chatbot</p>
-                        <p className="text-xs text-slate-500">Instant answers powered by Gemini</p>
-                     </div>
+                  );
+               })}
+            </div>
+         )}
+
+         {/* FAQ Tab */}
+         {activeTab === 'faq' && (
+            <div className="space-y-3 max-w-3xl">
+               {faqs.map((faq, idx) => (
+                  <div
+                     key={idx}
+                     className="border border-slate-100 rounded-xl overflow-hidden bg-white hover:border-slate-200 transition-all"
+                  >
+                     <button
+                        onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
+                        className="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+                     >
+                        <span className="text-base font-semibold text-slate-900 text-left">{faq.question}</span>
+                        <ChevronDown
+                           className={`w-5 h-5 text-slate-400 transition-transform flex-shrink-0 ${
+                              expandedFaq === idx ? 'rotate-180' : ''
+                           }`}
+                        />
+                     </button>
+                     {expandedFaq === idx && (
+                        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50">
+                           <p className="text-slate-600 leading-relaxed">{faq.answer}</p>
+                        </div>
+                     )}
                   </div>
-                  <div className="text-xs font-semibold text-green-600 bg-green-50 px-3 py-1 rounded-full flex items-center gap-2">
-                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /> Online
-                  </div>
+               ))}
+            </div>
+         )}
+
+         {/* Contact Tab */}
+         {activeTab === 'contact' && (
+            <div className="max-w-3xl">
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  {contacts.map((contact, idx) => {
+                     const Icon = contact.icon;
+                     return (
+                        <button
+                           key={idx}
+                           onClick={contact.action}
+                           className="p-6 rounded-2xl border border-slate-100 bg-white hover:border-green-200 hover:bg-green-50 transition-all group"
+                        >
+                           <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center mb-4 group-hover:bg-green-100 group-hover:text-green-600 transition-colors">
+                              <Icon className="w-6 h-6" />
+                           </div>
+                           <h3 className="text-base font-semibold text-slate-900 text-left mb-1">{contact.label}</h3>
+                           <p className="text-sm text-slate-600 text-left">{contact.value}</p>
+                        </button>
+                     );
+                  })}
                </div>
 
-               <div className="flex-1 overflow-y-auto bg-slate-50 p-6 space-y-4">
-                  {messages.map((msg, idx) => (
-                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[80%] rounded-2xl p-4 text-sm leading-relaxed shadow-sm ${
-                           msg.role === 'user'
-                              ? 'bg-green-600 text-white rounded-br-sm'
-                              : 'bg-white text-slate-700 border border-slate-100 rounded-bl-sm'
-                        }`}>
-                           {msg.text}
-                        </div>
+               {/* Contact Form */}
+               <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-100 p-8">
+                  <h3 className="text-lg font-semibold text-slate-900 mb-6">Send us a message</h3>
+                  <div className="space-y-4">
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input
+                           type="text"
+                           placeholder="Your name"
+                           className="px-4 py-3 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                        />
+                        <input
+                           type="email"
+                           placeholder="Your email"
+                           className="px-4 py-3 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                        />
                      </div>
-                  ))}
-                  {isTextLoading && (
-                     <div className="flex justify-start">
-                        <div className="bg-white p-4 rounded-2xl rounded-bl-sm border border-slate-100 shadow-sm flex gap-2 items-center">
-                           <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" />
-                           <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-100" />
-                           <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-200" />
-                        </div>
-                     </div>
-                  )}
-                  <div ref={chatEndRef} />
-               </div>
-
-               <div className="p-4 border-t border-slate-100 bg-white">
-                  <div className="flex gap-2">
                      <input
                         type="text"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSendText()}
-                        placeholder="Ask about crop health, soil care, or pricing"
-                        className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                        placeholder="Subject"
+                        className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
                      />
-                     <button
-                        onClick={handleSendText}
-                        disabled={!input.trim() || isTextLoading}
-                        className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-5 rounded-xl text-sm font-semibold shadow-lg shadow-green-100"
-                     >
-                        Send
+                     <textarea
+                        placeholder="How can we help?"
+                        rows={5}
+                        className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 resize-none"
+                     />
+                     <button className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors">
+                        Send Message
                      </button>
                   </div>
                </div>
-            </Card>
-
-            <div className="space-y-6">
-               <Card>
-                  <h3 className="text-base font-semibold text-slate-800 mb-4">FAQ</h3>
-                  <div className="space-y-4">
-                     {faqs.map((item, idx) => (
-                        <div key={idx} className="bg-slate-50 rounded-2xl p-4">
-                           <p className="text-sm font-semibold text-slate-800">{item.question}</p>
-                           <p className="text-sm text-slate-500 mt-2 leading-relaxed">{item.answer}</p>
-                        </div>
-                     ))}
-                  </div>
-               </Card>
-
-               <Card>
-                  <h3 className="text-base font-semibold text-slate-800 mb-4">Contact Us</h3>
-                  <div className="space-y-3">
-                     {contacts.map((item, idx) => {
-                        const Icon = item.icon;
-                        return (
-                           <div key={idx} className="flex items-center gap-3">
-                              <span className="w-10 h-10 rounded-2xl bg-slate-50 text-slate-500 flex items-center justify-center">
-                                 <Icon className="w-4 h-4" />
-                              </span>
-                              <div>
-                                 <p className="text-xs uppercase tracking-wide text-slate-400">{item.label}</p>
-                                 <p className="font-semibold text-slate-800">{item.value}</p>
-                              </div>
-                           </div>
-                        );
-                     })}
-                  </div>
-                  <button className="w-full mt-6 bg-slate-900 text-white py-3 rounded-xl text-sm font-semibold hover:bg-slate-800 transition">
-                     Email Support Team
-                  </button>
-               </Card>
             </div>
-         </div>
+         )}
       </div>
    );
 };
