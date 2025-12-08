@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Brand Colors */
+  --color-brand-primary: #348520;
+  --color-brand-secondary: #2a7b20;
+  --color-brand-dark: #064812;
+  --color-brand-accent: #105717;
+  --color-brand-light: #1e6c1c;
+}
+
 * {
   box-sizing: border-box;
 }
