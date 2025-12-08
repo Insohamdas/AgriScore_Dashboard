@@ -178,7 +178,11 @@ const Layout: React.FC<{ children: React.ReactNode; onLogout: () => void }> = ({
 
             <div className="p-4 mt-auto">
                <button
-                  onClick={onLogout}
+                  onClick={() => {
+                     if (window.confirm('Are you sure you want to log out? You will be returned to the login page.')) {
+                        onLogout();
+                     }
+                  }}
                   className="flex items-center w-full px-4 py-3 text-slate-500 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors text-[13px] font-medium"
                >
                   <LogOut className="w-[18px] h-[18px] mr-3.5" />
