@@ -18,6 +18,8 @@ import { api } from './services/mockDataService';
 import { useProfile } from './hooks/useAuth';
 import { supabase } from './lib/supabase';
 import { Task, HarvestItem } from './types';
+import { Notifications } from './pages/Notifications';
+import { HelpSupport } from './pages/HelpSupport';
 
 // Import reusable UI components
 import { StatusBadge, Toggle, Card, SectionHeader, MiniGauge } from './components/ui';
@@ -104,40 +106,73 @@ const Layout: React.FC<{ children: React.ReactNode; onLogout: () => void }> = ({
          </aside>
 
          <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-            <header className="h-20 bg-white/80 backdrop-blur-sm border-b border-slate-100 flex items-center justify-between px-6 lg:px-10 z-20 sticky top-0">
-               <button onClick={() => setIsMobileOpen(true)} className="lg:hidden p-2 text-slate-500">
+            <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center justify-between px-6 lg:px-10 z-20 sticky top-0 supports-[backdrop-filter]:bg-white/60">
+               <button onClick={() => setIsMobileOpen(true)} className="lg:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors">
                   <Menu className="w-6 h-6" />
                </button>
 
-               <div className="hidden md:flex items-center max-w-lg w-full relative group">
-                  <Search className="w-[18px] h-[18px] absolute left-4 text-slate-400 group-focus-within:text-green-500 transition-colors" />
-                  <input
-                     type="text"
-                     placeholder="Search something here...."
-                     className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-transparent focus:border-green-200 focus:bg-white rounded-full text-sm text-slate-600 placeholder:text-slate-400 focus:ring-4 focus:ring-green-500/10 transition-all outline-none"
-                  />
+               <div className="flex-1 flex justify-center px-4 lg:px-8">
+                  <div className="hidden md:flex items-center w-full max-w-md relative group transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] focus-within:max-w-2xl">
+                     <div className="absolute inset-0 bg-gradient-to-r from-green-100/50 to-emerald-100/50 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 -z-10 blur-md" />
+                     <Search className="w-[18px] h-[18px] absolute left-4 text-slate-400 group-focus-within:text-green-600 transition-all duration-300 group-focus-within:scale-110 z-10" />
+                     <input
+                        type="text"
+                        placeholder="Search farms, crops, or tasks..."
+                        className="w-full pl-11 pr-4 py-2.5 bg-slate-100/50 border border-slate-200 rounded-2xl text-sm text-slate-600 placeholder:text-slate-400 transition-all duration-300 outline-none 
+                        focus:bg-white focus:border-green-500/30 focus:ring-4 focus:ring-green-500/10 focus:shadow-lg
+                        hover:bg-white hover:border-slate-300"
+                     />
+                  </div>
                </div>
 
-               <div className="flex items-center space-x-5">
-                  <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors hover:bg-slate-50 rounded-full">
+               <div className="flex items-center gap-5">
+                  {/* Device Status Indicators */}
+                  <div className="hidden xl:flex items-center gap-4 pr-5 border-r border-slate-200">
+                     <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100 shadow-sm">
+                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs font-semibold">System Online</span>
+                     </div>
+                     
+                     <div className="flex items-center gap-1.5 text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-full border border-slate-100" title="Network Strength">
+                        <Wifi className="w-3.5 h-3.5 text-slate-600" />
+                        <span className="text-xs font-medium">5G</span>
+                     </div>
+
+                     <div className="flex items-center gap-1.5 text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-full border border-slate-100" title="Sensor Battery">
+                        <Battery className="w-3.5 h-3.5 text-slate-600" />
+                        <span className="text-xs font-medium">98%</span>
+                     </div>
+                  </div>
+
+                  <button 
+                     onClick={() => navigate('/notifications')}
+                     className="relative p-2.5 text-slate-400 hover:text-slate-600 transition-colors hover:bg-slate-100 rounded-full focus:outline-none focus:ring-2 focus:ring-slate-200"
+                  >
                      <Bell className="w-5 h-5" />
                      <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
                   </button>
 
                   <button 
                      onClick={() => navigate('/account')}
-                     className="flex items-center pl-2 cursor-pointer hover:opacity-80 transition-opacity"
+                     className="group flex items-center gap-3 pl-1.5 pr-4 py-1.5 rounded-2xl hover:bg-white transition-all duration-300 border border-transparent hover:border-slate-100 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
                   >
-                     {userAvatar ? (
-                       <img src={userAvatar} alt={userName} className="w-9 h-9 rounded-full object-cover shadow-sm ring-2 ring-white" />
-                     ) : (
-                       <div className="w-9 h-9 rounded-full bg-orange-400 flex items-center justify-center text-white font-bold text-xs shadow-sm ring-2 ring-white">
-                          {userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
-                       </div>
-                     )}
-                     <div className="ml-3 hidden md:block">
-                        <p className="text-sm font-semibold text-slate-900 leading-tight">{userName}</p>
-                        <p className="text-[11px] text-slate-400">{userEmail}</p>
+                     <div className="relative">
+                        {userAvatar ? (
+                           <img src={userAvatar} alt={userName} className="w-10 h-10 rounded-xl object-cover shadow-sm ring-2 ring-white group-hover:ring-emerald-50 transition-all duration-300" />
+                        ) : (
+                           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-bold text-sm shadow-sm ring-2 ring-white group-hover:ring-emerald-50 transition-all duration-300">
+                              {userName.charAt(0)}
+                           </div>
+                        )}
+                        <span className="absolute -bottom-1 -right-1 flex h-3.5 w-3.5">
+                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                           <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
+                        </span>
+                     </div>
+
+                     <div className="hidden md:flex flex-col items-start text-left">
+                        <span className="text-sm font-bold text-slate-800 group-hover:text-emerald-950 transition-colors">{userName}</span>
+                        <span className="text-[11px] font-medium text-slate-400 group-hover:text-emerald-600/80 transition-colors">{userEmail}</span>
                      </div>
                   </button>
                </div>
@@ -2703,220 +2738,7 @@ const MyAccount = () => {
   );
 };
 
-const HelpSupport = () => {
-   const [messages, setMessages] = useState<{role: 'user' | 'model', text: string}[]>([
-      { role: 'model', text: 'Hi! 👋 I\'m here to help. Ask me anything about your farm, soil, weather, or AgriScore features.' }
-   ]);
-   const [input, setInput] = useState('');
-   const [isLoading, setIsLoading] = useState(false);
-   const chatEndRef = useRef<HTMLDivElement>(null);
 
-   const faqs = [
-      { q: 'How do I improve my AgriScore?', a: 'Monitor soil moisture, maintain nutrient balance, and keep devices healthy. Weekly check-ins help.' },
-      { q: 'Can I export my data?', a: 'Yes! Click Export on any dashboard. Choose PDF or Excel format with all your readings.' },
-      { q: 'How often do sensors update?', a: 'Every 15 minutes for sensor data, hourly for weather. All in real-time on your dashboard.' },
-      { q: 'Device is offline, what do I do?', a: 'Check battery and WiFi. Go to Settings → IoT Devices. We alert if offline for 30+ mins.' },
-      { q: 'Is my data secure?', a: 'Yes. All data encrypted at rest and in transit. We never share your farm data with anyone.' },
-      { q: 'How do I contact support?', a: 'Email support@agriscore.in or call +91 98765 43210. We respond within 4 hours.' },
-   ];
-
-   const contacts = [
-      { 
-         icon: Mail, 
-         label: 'Email Support', 
-         value: 'support@agriscore.in',
-         action: () => window.location.href = 'mailto:support@agriscore.in'
-      },
-      { 
-         icon: Phone, 
-         label: 'Call Us', 
-         value: '+91 98765 43210',
-         action: () => alert('📞 Call: +91 98765 43210')
-      },
-      { 
-         icon: Clock, 
-         label: 'Support Hours', 
-         value: 'Mon-Sat 8am-8pm IST',
-         action: () => alert('We are available Mon-Sat from 8am to 8pm IST')
-      },
-   ];
-
-   useEffect(() => {
-      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-   }, [messages]);
-
-   const handleSend = async () => {
-      if (!input.trim()) return;
-      const userMsg = input;
-      setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
-      setInput('');
-      setIsLoading(true);
-
-      try {
-         const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-         if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-            throw new Error('API Key missing. Set VITE_GEMINI_API_KEY in .env.local');
-         }
-
-         const ai = new GoogleGenAI({ apiKey });
-         const contents = messages.map(m => ({
-            role: m.role === 'user' ? 'user' : 'model',
-            parts: [{ text: m.text }]
-         }));
-         contents.push({ role: 'user', parts: [{ text: userMsg }] });
-
-         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents,
-            config: {
-               systemInstruction: 'You are a helpful agricultural assistant. Provide practical advice about farming, crops, soil health, and AgriScore features.'
-            }
-         });
-
-         const text = response.text || 'No response';
-         setMessages(prev => [...prev, { role: 'model', text }]);
-      } catch (error: any) {
-         console.error('Error:', error);
-         setMessages(prev => [...prev, { role: 'model', text: `Error: ${error.message}` }]);
-      } finally {
-         setIsLoading(false);
-      }
-   };
-
-   return (
-      <div className="space-y-8 pb-8">
-         <div>
-            <h1 className="text-3xl font-bold text-slate-900">Help & Support</h1>
-            <p className="text-slate-500 mt-1">Get instant answers from our AI or reach our support team</p>
-         </div>
-
-         {/* Contact Cards */}
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {contacts.map((contact, i) => {
-               const Icon = contact.icon;
-               return (
-                  <Card 
-                     key={i}
-                     className="p-5 cursor-pointer hover:shadow-lg hover:border-green-200 transition-all"
-                     onClick={contact.action}
-                  >
-                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-green-100 text-green-600 flex items-center justify-center">
-                           <Icon className="w-5 h-5" />
-                        </div>
-                        <div>
-                           <p className="text-xs text-slate-500 font-medium">{contact.label}</p>
-                           <p className="text-sm font-semibold text-slate-900">{contact.value}</p>
-                        </div>
-                     </div>
-                  </Card>
-               );
-            })}
-         </div>
-
-         {/* Main Content */}
-         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Chat */}
-            <Card className="lg:col-span-2 p-0 flex flex-col h-[550px] overflow-hidden">
-               <div className="px-6 py-4 border-b border-slate-200 bg-green-600 text-white">
-                  <h2 className="font-semibold">Chat with AI Assistant</h2>
-                  <p className="text-sm text-green-100">Ask about your farm, soil, weather & more</p>
-               </div>
-
-               <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-slate-50">
-                  {messages.map((msg, i) => (
-                     <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-xs px-4 py-2 rounded-lg text-sm leading-relaxed ${
-                           msg.role === 'user'
-                              ? 'bg-green-600 text-white rounded-br-none'
-                              : 'bg-white text-slate-900 border border-slate-200 rounded-bl-none'
-                        }`}>
-                           {msg.text}
-                        </div>
-                     </div>
-                  ))}
-                  {isLoading && (
-                     <div className="flex justify-start">
-                        <div className="bg-white border border-slate-200 px-4 py-2 rounded-lg flex gap-2">
-                           <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" />
-                           <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                           <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
-                        </div>
-                     </div>
-                  )}
-                  <div ref={chatEndRef} />
-               </div>
-
-               <div className="p-4 border-t border-slate-200 bg-white">
-                  <div className="flex gap-2">
-                     <input
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                        placeholder="Ask your question..."
-                        className="flex-1 px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500"
-                     />
-                     <button
-                        onClick={handleSend}
-                        disabled={!input.trim() || isLoading}
-                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
-                     >
-                        Send
-                     </button>
-                  </div>
-               </div>
-            </Card>
-
-            {/* FAQ Sidebar */}
-            <Card className="p-6 h-fit">
-               <h2 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                  <HelpCircle className="w-5 h-5 text-green-600" />
-                  Quick Answers
-               </h2>
-               <div className="space-y-2">
-                  {faqs.map((item, i) => (
-                     <details key={i} className="group">
-                        <summary className="cursor-pointer py-2 px-2 text-sm font-medium text-slate-900 group-open:text-green-600 hover:bg-slate-50 rounded transition-colors flex items-center justify-between">
-                           <span className="text-left">{item.q}</span>
-                           <ChevronDown className="w-4 h-4 flex-shrink-0 group-open:rotate-180 transition-transform" />
-                        </summary>
-                        <p className="text-xs text-slate-600 px-2 py-2 border-t border-slate-200 mt-1">{item.a}</p>
-                     </details>
-                  ))}
-               </div>
-            </Card>
-         </div>
-
-         {/* Additional Resources */}
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="p-6 border-l-4 border-green-600">
-               <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-green-600" />
-                  Documentation
-               </h3>
-               <p className="text-sm text-slate-600 mb-4">Learn everything about AgriScore features and how to use them effectively.</p>
-               <button className="text-sm font-semibold text-green-600 hover:text-green-700 flex items-center gap-1">
-                  Read docs <ChevronRight className="w-4 h-4" />
-               </button>
-            </Card>
-
-            <Card className="p-6 border-l-4 border-green-600">
-               <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
-                  <LifeBuoy className="w-5 h-5 text-green-600" />
-                  Need Help?
-               </h3>
-               <p className="text-sm text-slate-600 mb-4">Our support team is ready to help you with any issues or questions.</p>
-               <button 
-                  onClick={() => window.location.href = 'mailto:support@agriscore.in'}
-                  className="text-sm font-semibold text-green-600 hover:text-green-700 flex items-center gap-1"
-               >
-                  Contact support <ChevronRight className="w-4 h-4" />
-               </button>
-            </Card>
-         </div>
-      </div>
-   );
-};
 
 // Helper for Chatbot Icon
 const SparklesIcon = ({ className }: { className?: string }) => (
@@ -3334,6 +3156,7 @@ const AppShell: React.FC<AppShellProps> = ({ onLogout }) => {
           <Route path="/score" element={<AgriScorePage />} />
           <Route path="/settings" element={<FarmSettings />} />
           <Route path="/account" element={<MyAccount />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="/help" element={<HelpSupport />} />
         </Routes>
       </Layout>
