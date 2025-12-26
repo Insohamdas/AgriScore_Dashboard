@@ -121,7 +121,7 @@ export const Notifications = () => {
       <SectionHeader 
         title="Notifications" 
         subtitle="Stay updated with your farm's activities and alerts"
-        rightElement={
+        action={
           <div className="flex items-center gap-3">
             <button 
               onClick={markAllAsRead}
