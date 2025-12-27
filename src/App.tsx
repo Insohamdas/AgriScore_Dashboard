@@ -10,7 +10,7 @@ import {
   ChevronDown, MessageSquare, Phone, FlaskConical, Layers, Diamond, Award, Star,
   CreditCard, Users, Link as LinkIcon, Key, History, BadgeCheck, AlertCircle, FileCheck,
   Facebook, IndianRupee, Sunrise, Sunset, Eye, Gauge, Navigation, Umbrella, MoveRight,
-  BookOpen, Bug, LifeBuoy, Upload
+  BookOpen, Bug, LifeBuoy, Upload, Moon
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
 import { GoogleGenAI } from "@google/genai";
@@ -1234,6 +1234,27 @@ const ReportsAnalytics = () => {
 };
 
 const AgriScorePage = () => {
+   const [displayScore, setDisplayScore] = useState(0);
+   
+   useEffect(() => {
+      let start = 0;
+      const end = 82;
+      const duration = 2000;
+      const increment = end / (duration / 16);
+      
+      const timer = setInterval(() => {
+         start += increment;
+         if (start >= end) {
+            setDisplayScore(end);
+            clearInterval(timer);
+         } else {
+            setDisplayScore(Math.floor(start));
+         }
+      }, 16);
+      
+      return () => clearInterval(timer);
+   }, []);
+
    const summaryCards = [
       {
          label: 'Overall AgriScore',
@@ -1342,185 +1363,308 @@ const AgriScorePage = () => {
 
    return (
       <div className="space-y-8">
-         <SectionHeader
-            title="AgriScore"
-            subtitle="Live ESG, resilience, and compliance posture for your portfolio"
-            action={
-               <div className="flex gap-2">
-                  <button className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center gap-2">
-                     <Filter className="w-4 h-4" /> Configure weights
-                  </button>
-                  <button className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold shadow-lg shadow-slate-300 flex items-center gap-2">
-                     <Download className="w-4 h-4" /> Share snapshot
-                  </button>
-               </div>
-            }
-         />
+         {/* Header with Gradient Text */}
+         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+               <h1 className="text-4xl font-black text-slate-900 tracking-tighter flex items-center gap-3">
+                  <div className="p-3 bg-emerald-900 rounded-2xl text-emerald-400 shadow-lg shadow-emerald-900/20">
+                     <Activity className="w-8 h-8" />
+                  </div>
+                  <span>Agri<span className="text-emerald-600">Score</span></span>
+               </h1>
+               <p className="text-slate-500 font-medium mt-2 ml-1">Live ESG & Resilience Intelligence</p>
+            </div>
+            <div className="flex gap-3">
+               <button className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm flex items-center gap-2">
+                  <Filter className="w-4 h-4" /> Configure
+               </button>
+               <button className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 hover:shadow-lg hover:shadow-slate-900/20 transition-all flex items-center gap-2">
+                  <Download className="w-4 h-4" /> Export Report
+               </button>
+            </div>
+         </div>
 
-         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-            {summaryCards.map((card, idx) => (
-               <Card key={idx} className="space-y-2">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{card.label}</p>
-                  <div className="text-2xl font-bold text-slate-900">{card.value}</div>
-                  <span className={`text-xs font-semibold ${card.positive ? 'text-green-600' : 'text-red-600'}`}>{card.change}</span>
-               </Card>
+         {/* Hero Score Card */}
+         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 bg-white rounded-[2rem] p-6 relative overflow-hidden shadow-xl shadow-slate-200/50 border border-slate-100 group">
+               <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-50 rounded-full blur-3xl -mr-20 -mt-20 animate-pulse opacity-60"></div>
+               <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-50 rounded-full blur-3xl -ml-20 -mb-20 opacity-60"></div>
+               
+               <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
+                  <div className="relative w-32 h-32 flex-shrink-0">
+                     <svg className="w-full h-full transform -rotate-90 drop-shadow-xl">
+                        <defs>
+                           <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                              <stop offset="0%" stopColor="#10b981" />
+                              <stop offset="100%" stopColor="#059669" />
+                           </linearGradient>
+                        </defs>
+                        <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="10" fill="transparent" className="text-slate-100" />
+                        <circle 
+                           cx="64" cy="64" r="56" 
+                           stroke="url(#scoreGradient)" 
+                           strokeWidth="10" 
+                           fill="transparent" 
+                           strokeDasharray={352} 
+                           strokeDashoffset={352 - (352 * displayScore) / 100} 
+                           className="transition-all duration-1000 ease-out" 
+                           strokeLinecap="round" 
+                        />
+                     </svg>
+                     <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-3xl font-black tracking-tighter text-slate-900">{displayScore}</span>
+                        <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mt-0.5 bg-emerald-50 px-1.5 py-0.5 rounded-lg">Excellent</span>
+                     </div>
+                  </div>
+                  
+                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+                     <div className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm hover:shadow-md hover:border-emerald-100 transition-all group/card relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-12 h-12 bg-emerald-50 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover/card:scale-150"></div>
+                        <div className="relative z-10">
+                           <div className="flex items-start justify-between mb-1.5">
+                              <div className="p-1.5 bg-emerald-100 rounded-lg text-emerald-600 group-hover/card:scale-110 transition-transform shadow-sm">
+                                 <Award className="w-4 h-4" />
+                              </div>
+                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">92% Match</span>
+                           </div>
+                           <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-0.5">Sustainability Tier</p>
+                           <p className="text-lg font-black text-slate-900 tracking-tight">Gold Standard</p>
+                        </div>
+                     </div>
+
+                     <div className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-100 transition-all group/card relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-12 h-12 bg-blue-50 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover/card:scale-150"></div>
+                        <div className="relative z-10">
+                           <div className="flex items-start justify-between mb-1.5">
+                              <div className="p-1.5 bg-blue-100 rounded-lg text-blue-600 group-hover/card:scale-110 transition-transform shadow-sm">
+                                 <Shield className="w-4 h-4" />
+                              </div>
+                              <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-100">Stable</span>
+                           </div>
+                           <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-0.5">Resilience Outlook</p>
+                           <p className="text-lg font-black text-slate-900 tracking-tight">Low Risk</p>
+                        </div>
+                     </div>
+
+                     <div className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm hover:shadow-md hover:border-purple-100 transition-all group/card relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-12 h-12 bg-purple-50 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover/card:scale-150"></div>
+                        <div className="relative z-10">
+                           <div className="flex items-start justify-between mb-1.5">
+                              <div className="p-1.5 bg-purple-100 rounded-lg text-purple-600 group-hover/card:scale-110 transition-transform shadow-sm">
+                                 <Wifi className="w-4 h-4" />
+                              </div>
+                              <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded-full border border-purple-100">Syncing</span>
+                           </div>
+                           <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-0.5">Data Confidence</p>
+                           <p className="text-lg font-black text-slate-900 tracking-tight">97% Score</p>
+                        </div>
+                     </div>
+
+                     <div className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm hover:shadow-md hover:border-amber-100 transition-all group/card relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-12 h-12 bg-amber-50 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover/card:scale-150"></div>
+                        <div className="relative z-10">
+                           <div className="flex items-start justify-between mb-1.5">
+                              <div className="p-1.5 bg-amber-100 rounded-lg text-amber-600 group-hover/card:scale-110 transition-transform shadow-sm">
+                                 <Calendar className="w-4 h-4" />
+                              </div>
+                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-100">Nov 28</span>
+                           </div>
+                           <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-0.5">Next Audit</p>
+                           <p className="text-lg font-black text-slate-900 tracking-tight">12 Days Left</p>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            {/* Quick Actions / Certifications */}
+            <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col">
+               <h3 className="font-black text-slate-900 mb-6 flex items-center gap-2 text-lg">
+                  <Award className="w-6 h-6 text-emerald-600" /> Certifications
+               </h3>
+               <div className="space-y-4 flex-1">
+                  {certifications.map((item, idx) => (
+                     <div key={idx} className="group flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100 cursor-pointer hover:shadow-sm">
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${idx === 0 ? 'bg-emerald-100 text-emerald-600' : idx === 1 ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>
+                           <item.icon className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                           <p className="text-sm font-bold text-slate-900 truncate">{item.name}</p>
+                           <p className="text-xs text-slate-500 truncate font-medium mt-0.5">{item.status}</p>
+                        </div>
+                        <div className={`text-xs font-black px-2.5 py-1.5 rounded-xl ${idx === 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-600'}`}>
+                           {item.score}
+                        </div>
+                     </div>
+                  ))}
+               </div>
+               <button className="w-full mt-4 py-4 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 font-bold text-xs hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all uppercase tracking-wide">
+                  + Add Certification
+               </button>
+            </div>
+         </div>
+
+         {/* Charts & Breakdown */}
+         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-2 bg-white rounded-[2rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50">
+               <div className="flex items-center justify-between mb-8">
+                  <div>
+                     <h3 className="font-black text-slate-900 text-lg">Score Contributors</h3>
+                     <p className="text-xs text-slate-500 font-bold mt-1 uppercase tracking-wide">Weighted pillars vs peer benchmark</p>
+                  </div>
+                  <div className="flex gap-3">
+                     <span className="flex items-center gap-2 text-xs font-bold text-slate-600 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></div> You
+                     </span>
+                     <span className="flex items-center gap-2 text-xs font-bold text-slate-600 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
+                        <div className="w-2.5 h-2.5 rounded-full bg-slate-300"></div> Peers
+                     </span>
+                  </div>
+               </div>
+               <div className="h-[320px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                     <BarChart data={scoreBreakdown} barSize={40}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                        <XAxis dataKey="name" stroke="#94A3B8" fontSize={11} fontWeight={700} tickLine={false} axisLine={false} dy={10} />
+                        <YAxis stroke="#94A3B8" fontSize={11} fontWeight={700} tickLine={false} axisLine={false} />
+                        <Tooltip 
+                           cursor={{ fill: '#F8FAFC' }}
+                           contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', padding: '12px' }}
+                        />
+                        <Bar dataKey="score" radius={[8, 8, 8, 8]} fill="#10B981" />
+                        <Bar dataKey="benchmark" radius={[8, 8, 8, 8]} fill="#E2E8F0" />
+                     </BarChart>
+                  </ResponsiveContainer>
+               </div>
+            </div>
+
+            <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col">
+               <h3 className="font-black text-slate-900 mb-6 text-lg flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-500" /> Risk Watchlist
+               </h3>
+               <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                  {riskAlerts.map((risk, idx) => (
+                     <div key={idx} className="p-5 rounded-2xl bg-red-50/50 border border-red-100 hover:shadow-md transition-all group cursor-pointer">
+                        <div className="flex items-start gap-4">
+                           <div className="p-2.5 bg-white rounded-xl shadow-sm text-red-500 group-hover:scale-110 transition-transform">
+                              <AlertTriangle className="w-5 h-5" />
+                           </div>
+                           <div>
+                              <p className="text-sm font-black text-slate-900">{risk.label}</p>
+                              <p className="text-xs text-red-600 font-bold mt-1">{risk.impact}</p>
+                              <div className="mt-3 inline-flex items-center px-2.5 py-1 rounded-lg bg-white border border-red-100 text-[10px] font-black text-red-500 uppercase tracking-wide shadow-sm">
+                                 {risk.severity}
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </div>
+         </div>
+
+         {/* Pillars Grid */}
+         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            {sustainabilityPillars.map((pillar, idx) => (
+               <div key={idx} className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-lg shadow-slate-200/50 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer">
+                  <div className="flex justify-between items-start mb-6">
+                     <div className={`p-4 rounded-2xl ${pillar.accent} group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
+                        {idx === 0 ? <Droplets className={`w-7 h-7 ${pillar.gaugeColor}`} /> :
+                         idx === 1 ? <Sprout className={`w-7 h-7 ${pillar.gaugeColor}`} /> :
+                         idx === 2 ? <Cloud className={`w-7 h-7 ${pillar.gaugeColor}`} /> :
+                         <Zap className={`w-7 h-7 ${pillar.gaugeColor}`} />}
+                     </div>
+                     <span className={`text-xs font-black px-3 py-1.5 rounded-xl ${pillar.value >= 75 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                        {pillar.change}
+                     </span>
+                  </div>
+                  
+                  <h4 className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2">{pillar.label}</h4>
+                  <div className="flex items-end gap-2 mb-4">
+                     <span className="text-4xl font-black text-slate-900 tracking-tight">{pillar.value}</span>
+                     <span className="text-sm font-bold text-slate-400 mb-1.5">/100</span>
+                  </div>
+                  
+                  <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden mb-4">
+                     <div className={`h-full rounded-full ${pillar.barColor} transition-all duration-1000`} style={{ width: `${pillar.value}%` }}></div>
+                  </div>
+                  
+                  <p className="text-xs font-bold text-slate-500">{pillar.detail}</p>
+               </div>
             ))}
          </div>
 
-         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <Card className="xl:col-span-2">
-               <div className="flex items-center justify-between mb-4">
-                  <div>
-                     <h3 className="font-bold text-slate-800">Score contributors</h3>
-                     <p className="text-xs text-slate-400">Weighted pillars vs peer benchmark</p>
-                  </div>
-                  <span className="text-xs font-semibold text-slate-500">Weights auto-balanced</span>
-               </div>
-               <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={scoreBreakdown} margin={{ left: -20 }}>
-                     <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-                     <XAxis dataKey="name" stroke="#94A3B8" fontSize={12} />
-                     <YAxis stroke="#94A3B8" fontSize={12} />
-                     <Tooltip contentStyle={{ borderRadius: 16, borderColor: '#E2E8F0' }} />
-                     <Bar dataKey="score" radius={[8, 8, 0, 0]} fill="#16A34A" name="Your score" />
-                     <Bar dataKey="benchmark" radius={[8, 8, 0, 0]} fill="#CBD5F5" name="Peer avg" />
-                  </BarChart>
-               </ResponsiveContainer>
-            </Card>
-
-            <Card>
-               <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-bold text-slate-800">Certification readiness</h3>
-                  <span className="text-xs text-slate-400">Audit center</span>
-               </div>
-               <div className="space-y-4">
-                  {certifications.map((item, idx) => (
-                     <div key={idx} className="flex items-start gap-3 p-3 border border-slate-100 rounded-2xl">
-                        <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center">
-                           <item.icon className="w-5 h-5 text-slate-500" />
-                        </div>
-                        <div className="flex-1">
-                           <p className="text-sm font-semibold text-slate-800">{item.name}</p>
-                           <p className="text-xs text-slate-500">{item.status}</p>
-                        </div>
-                        <span className={`text-xs font-semibold ${item.accent}`}>{item.score}</span>
-                     </div>
-                  ))}
-               </div>
-            </Card>
-         </div>
-
+         {/* Roadmap & Audit Grid */}
          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-               <div className="flex items-center justify-between mb-5">
-                  <h3 className="font-bold text-slate-800">Sustainability pillars</h3>
-                  <span className="text-xs text-slate-400">Target ≥ 75</span>
-               </div>
-               <div className="space-y-4">
-                  {sustainabilityPillars.map((pillar) => (
-                     <div
-                        key={pillar.label}
-                        className={`flex items-center gap-5 p-4 rounded-2xl border border-slate-100 ${pillar.accent} hover:border-emerald-200 transition-colors`}
-                     >
-                        <div className="flex flex-col items-center justify-center min-w-[96px]">
-                           <MiniGauge
-                              value={pillar.value}
-                              max={100}
-                              color={pillar.gaugeColor}
-                              track="text-slate-200"
-                              size={92}
-                              strokeWidth={8}
-                           >
-                              <span className="text-lg font-bold text-slate-900 leading-none">{pillar.value}</span>
-                              <span className="text-[10px] text-slate-500 mt-0.5">/100</span>
-                           </MiniGauge>
-                           <span className="mt-2 text-[11px] font-semibold text-slate-500">{pillar.status}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                           <div className="flex items-center justify-between gap-4">
-                              <p className="text-sm font-semibold text-slate-800">{pillar.label}</p>
-                              <span className={`text-xs font-semibold ${pillar.value >= 75 ? 'text-emerald-600' : 'text-amber-600'}`}>{pillar.change}</span>
-                           </div>
-                           <p className="text-xs text-slate-500 mt-1">{pillar.detail}</p>
-                           <div className="mt-3 h-2 bg-white/70 rounded-full overflow-hidden">
-                              <div className={`h-full rounded-full ${pillar.barColor}`} style={{ width: `${pillar.value}%` }}></div>
-                           </div>
-                           <p className="mt-1 text-[11px] text-slate-500">Target ≥ 75 • {pillar.trend}</p>
-                        </div>
+            {/* Improvement Roadmap */}
+            <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col">
+               <div className="flex items-center justify-between mb-8">
+                  <h3 className="font-black text-slate-900 flex items-center gap-3 text-lg">
+                     <div className="p-2 bg-amber-100 rounded-xl text-amber-600">
+                        <Zap className="w-5 h-5" />
                      </div>
-                  ))}
+                     Improvement Roadmap
+                  </h3>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">Next 30 Days</span>
                </div>
-            </Card>
-
-            <Card>
-               <div className="flex items-center justify-between mb-5">
-                  <h3 className="font-bold text-slate-800">Risk watchlist</h3>
-                  <span className="text-xs font-semibold text-orange-500">Auto-updated</span>
-               </div>
-               <div className="space-y-4">
-                  {riskAlerts.map((risk, idx) => (
-                     <div key={idx} className="p-4 border border-slate-100 rounded-2xl bg-slate-50">
-                        <div className="flex items-center gap-2 mb-1 text-xs font-semibold text-slate-500">
-                           <AlertCircle className="w-4 h-4 text-orange-400" />
-                           {risk.severity}
-                        </div>
-                        <p className="text-sm font-semibold text-slate-800">{risk.label}</p>
-                        <p className="text-xs text-slate-500">{risk.impact}</p>
-                     </div>
-                  ))}
-               </div>
-            </Card>
-         </div>
-
-         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-               <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-slate-800">Improvement roadmap</h3>
-                  <span className="text-xs text-slate-400">Next 30 days</span>
-               </div>
-               <div className="space-y-4">
+               <div className="space-y-5">
                   {actionItems.map((task, idx) => (
-                     <div key={idx} className="border border-slate-100 rounded-2xl p-4">
-                        <div className="flex items-center justify-between">
-                           <div>
-                              <p className="text-sm font-semibold text-slate-800">{task.task}</p>
-                              <p className="text-xs text-slate-500">Owner: {task.owner}</p>
-                           </div>
-                           <span className="text-xs font-semibold text-slate-500">{task.eta}</span>
+                     <div key={idx} className="group p-5 rounded-2xl border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50/30 transition-all cursor-pointer">
+                        <div className="flex items-center justify-between mb-3">
+                           <span className="text-sm font-black text-slate-900 group-hover:text-emerald-700 transition-colors">{task.task}</span>
+                           <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg group-hover:bg-white border border-transparent group-hover:border-slate-100">{task.eta}</span>
                         </div>
-                        <div className="mt-3 h-2 bg-slate-100 rounded-full overflow-hidden">
-                           <div className="h-full bg-green-500 rounded-full" style={{ width: `${task.progress}%` }}></div>
+                        <div className="flex items-center justify-between text-xs text-slate-500 mb-4">
+                           <span className="font-medium">Owner: <span className="font-bold text-slate-700">{task.owner}</span></span>
+                           <span className="font-black text-emerald-600">{task.progress}%</span>
+                        </div>
+                        <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                           <div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full shadow-sm" style={{ width: `${task.progress}%` }}></div>
                         </div>
                      </div>
                   ))}
                </div>
-            </Card>
+            </div>
 
-            <Card>
-               <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-slate-800">Audit & disclosure timeline</h3>
-                  <button className="text-xs font-semibold text-green-600">Sync calendar</button>
+            {/* Audit Timeline */}
+            <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col">
+               <div className="flex items-center justify-between mb-8">
+                  <h3 className="font-black text-slate-900 flex items-center gap-3 text-lg">
+                     <div className="p-2 bg-blue-100 rounded-xl text-blue-600">
+                        <Calendar className="w-5 h-5" />
+                     </div>
+                     Audit Timeline
+                  </h3>
+                  <button className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline">Sync Calendar</button>
                </div>
-               <div className="space-y-4">
+               <div className="relative pl-6 space-y-8 before:absolute before:left-[23px] before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-100">
                   {auditTimeline.map((event, idx) => (
-                     <div key={idx} className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-bold">
-                           {idx + 1}
+                     <div key={idx} className="relative flex items-start gap-6 group">
+                        <div className="absolute left-0 w-3 h-3 rounded-full bg-white border-[3px] border-slate-300 group-hover:border-blue-500 group-hover:scale-125 transition-all z-10 mt-1.5 shadow-sm"></div>
+                        <div className="flex-1 p-5 rounded-2xl bg-slate-50 border border-slate-100 group-hover:bg-white group-hover:shadow-lg group-hover:shadow-slate-200/50 transition-all cursor-pointer">
+                           <div className="flex justify-between items-start mb-2">
+                              <p className="text-sm font-black text-slate-900">{event.title}</p>
+                              <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wide ${
+                                 event.status === 'Ready' ? 'bg-emerald-100 text-emerald-600' : 
+                                 event.status === 'Docs in draft' ? 'bg-amber-100 text-amber-600' : 'bg-slate-200 text-slate-500'
+                              }`}>
+                                 {event.status}
+                              </span>
+                           </div>
+                           <p className="text-xs font-bold text-slate-500 mb-3">{event.due}</p>
+                           <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                              <UserIcon className="w-3.5 h-3.5" /> {event.owner}
+                           </div>
                         </div>
-                        <div className="flex-1">
-                           <p className="text-sm font-semibold text-slate-800">{event.title}</p>
-                           <p className="text-xs text-slate-500">{event.due}</p>
-                           <p className="text-xs text-slate-400 mt-1">Lead: {event.owner}</p>
-                        </div>
-                        <span className="text-xs font-semibold text-slate-500">{event.status}</span>
                      </div>
                   ))}
                </div>
-            </Card>
+            </div>
          </div>
       </div>
    );
 };
+
 
 // --- Page Components ---
 
@@ -1942,127 +2086,179 @@ const FarmSettings = () => {
   ];
 
   return (
-    <div className="space-y-6">
-       <SectionHeader title="Settings" subtitle="Manage farm configuration and devices" />
+    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 p-8 text-white shadow-2xl isolate">
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1625246333195-58197bd47d26?q=80&w=2071&auto=format&fit=crop')] opacity-10 mix-blend-overlay bg-cover bg-center"></div>
+          <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl animate-blob"></div>
+          <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-teal-500/20 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
+          
+          <div className="relative z-10">
+             <h1 className="text-3xl font-black tracking-tight mb-2 drop-shadow-lg">Farm Settings</h1>
+             <p className="text-emerald-100/80 text-base font-medium max-w-2xl">Configure your farm's digital twin, manage IoT device networks, and customize your dashboard experience.</p>
+          </div>
+       </div>
        
        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 space-y-6">
-             <Card>
-                <h3 className="font-bold text-slate-800 mb-4">Farm Details</h3>
-                <div className="space-y-4">
-                   <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Farm Name</label>
-                      <input type="text" defaultValue="Green Valley Estates" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-800 outline-none focus:border-green-500 transition-colors" />
+             <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-3xl opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                <h3 className="text-lg font-black text-slate-900 mb-5 flex items-center gap-2 relative z-10">
+                   <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+                      <Sprout className="w-4 h-4" />
                    </div>
-                   <div className="grid grid-cols-2 gap-4">
-                      <div>
-                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Latitude</label>
-                         <input type="text" defaultValue="22.68" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-800" />
+                   Farm Details
+                </h3>
+                <div className="space-y-4 relative z-10">
+                   <div className="group/input">
+                      <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5 group-focus-within/input:text-emerald-600 transition-colors">Farm Name</label>
+                      <input type="text" defaultValue="Green Valley Estates" className="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-sm" />
+                   </div>
+                   <div className="grid grid-cols-2 gap-3">
+                      <div className="group/input">
+                         <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5 group-focus-within/input:text-emerald-600 transition-colors">Latitude</label>
+                         <input type="text" defaultValue="22.68" className="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-sm" />
                       </div>
-                      <div>
-                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Longitude</label>
-                         <input type="text" defaultValue="88.38" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-800" />
+                      <div className="group/input">
+                         <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5 group-focus-within/input:text-emerald-600 transition-colors">Longitude</label>
+                         <input type="text" defaultValue="88.38" className="w-full p-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-sm" />
                       </div>
                    </div>
-                   <button className="w-full py-2.5 bg-slate-800 text-white rounded-lg text-sm font-bold hover:bg-slate-700 transition-colors">Save Changes</button>
+                   <button className="w-full py-3 bg-slate-900 text-white rounded-xl text-sm font-black uppercase tracking-wider hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-500/30 transition-all transform active:scale-95">Save Changes</button>
                 </div>
-             </Card>
+             </div>
              
-             <Card>
-                <h3 className="font-bold text-slate-800 mb-4">Preferences</h3>
+             <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 relative overflow-hidden">
+                <h3 className="text-lg font-black text-slate-900 mb-5 flex items-center gap-2">
+                   <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                      <Settings className="w-4 h-4" />
+                   </div>
+                   Preferences
+                </h3>
                 <div className="space-y-4">
-                   <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-slate-700">Notifications</span>
+                   <div className="flex justify-between items-center p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                      <div className="flex items-center gap-3">
+                         <Bell className="w-4 h-4 text-slate-400" />
+                         <span className="text-sm font-bold text-slate-700">Notifications</span>
+                      </div>
                       <Toggle
                          enabled={preferences.notifications}
                          onChange={(value) => setPreferences((prev) => ({ ...prev, notifications: value }))}
                       />
                    </div>
-                   <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-slate-700">Auto-Irrigation</span>
+                   <div className="flex justify-between items-center p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                      <div className="flex items-center gap-3">
+                         <Droplets className="w-4 h-4 text-slate-400" />
+                         <span className="text-sm font-bold text-slate-700">Auto-Irrigation</span>
+                      </div>
                       <Toggle
                          enabled={preferences.autoIrrigation}
                          onChange={(value) => setPreferences((prev) => ({ ...prev, autoIrrigation: value }))}
                       />
                    </div>
-                   <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-slate-700">Dark Mode</span>
+                   <div className="flex justify-between items-center p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                      <div className="flex items-center gap-3">
+                         <Moon className="w-4 h-4 text-slate-400" />
+                         <span className="text-sm font-bold text-slate-700">Dark Mode</span>
+                      </div>
                       <Toggle
                          enabled={preferences.darkMode}
                          onChange={(value) => setPreferences((prev) => ({ ...prev, darkMode: value }))}
                       />
                    </div>
-                   <div className="pt-2 border-t border-slate-100">
-                      <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Timezone</label>
-                      <select value={preferences.timezone} onChange={(e) => setPreferences(prev => ({ ...prev, timezone: e.target.value }))} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm">
-                         <option>IST (GMT+05:30)</option>
-                         <option>UTC (GMT+00:00)</option>
-                         <option>EST (GMT-05:00)</option>
-                      </select>
+                   <div className="pt-3 border-t border-slate-100">
+                      <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Timezone</label>
+                      <div className="relative">
+                         <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                         <select value={preferences.timezone} onChange={(e) => setPreferences(prev => ({ ...prev, timezone: e.target.value }))} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer hover:bg-white">
+                            <option>IST (GMT+05:30)</option>
+                            <option>UTC (GMT+00:00)</option>
+                            <option>EST (GMT-05:00)</option>
+                         </select>
+                      </div>
                    </div>
                 </div>
-             </Card>
+             </div>
           </div>
 
-          <Card className="lg:col-span-2">
-             <div className="flex justify-between items-center mb-6">
-                <h3 className="font-bold text-slate-800">Connected Devices</h3>
-                <button className="text-xs font-bold text-green-600 bg-green-50 px-3 py-1.5 rounded-lg hover:bg-green-100 transition-colors flex items-center">
-                   <Plus className="w-3.5 h-3.5 mr-1" /> Add New Device
-                </button>
-             </div>
-             
-             <div className="overflow-hidden">
-                <table className="w-full">
-                   <thead>
-                      <tr className="text-left text-xs font-bold text-slate-400 uppercase bg-slate-50/50">
-                         <th className="p-3 pl-4 rounded-l-lg">Device Name</th>
-                         <th className="p-3">Type</th>
-                         <th className="p-3">Location</th>
-                         <th className="p-3">Battery</th>
-                         <th className="p-3">Status</th>
-                         <th className="p-3 rounded-r-lg"></th>
-                      </tr>
-                   </thead>
-                   <tbody className="text-sm">
-                      {devices.map(device => (
-                         <tr key={device.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
-                            <td className="p-4 font-bold text-slate-700 flex items-center gap-3">
-                               <div className={`p-2 rounded-lg ${
-                                  device.status === 'Online' ? 'bg-green-100 text-green-600' : 
+          <div className="lg:col-span-2">
+             <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden flex flex-col h-full">
+                <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50">
+                   <div>
+                      <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                         <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
+                            <Wifi className="w-4 h-4" />
+                         </div>
+                         Connected Devices
+                      </h3>
+                      <p className="text-xs text-slate-500 font-medium mt-1 ml-10">Manage your IoT sensor network</p>
+                   </div>
+                   <button className="text-xs font-bold text-white bg-emerald-600 px-4 py-2.5 rounded-xl hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/20 transition-all flex items-center transform active:scale-95">
+                      <Plus className="w-3.5 h-3.5 mr-1.5" /> Add New Device
+                   </button>
+                </div>
+                
+                <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50/30 flex-1">
+                   {devices.map(device => (
+                      <div key={device.id} className="group bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all relative overflow-hidden">
+                         <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-slate-50 to-slate-100 rounded-bl-full -mr-4 -mt-4 transition-colors group-hover:from-emerald-50 group-hover:to-teal-50"></div>
+                         
+                         <div className="flex items-start justify-between mb-4 relative z-10">
+                            <div className="flex items-center gap-3">
+                               <div className={`p-2.5 rounded-xl ${
+                                  device.status === 'Online' ? 'bg-emerald-100 text-emerald-600' : 
                                   device.status === 'Offline' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'
                                }`}>
-                                  {device.status === 'Online' && <Wifi className="w-4 h-4" />}
-                                  {device.status === 'Offline' && <WifiOff className="w-4 h-4" />}
-                                  {device.status === 'Maintenance' && <AlertTriangle className="w-4 h-4" />}
+                                  {device.status === 'Online' && <Wifi className="w-5 h-5" />}
+                                  {device.status === 'Offline' && <WifiOff className="w-5 h-5" />}
+                                  {device.status === 'Maintenance' && <AlertTriangle className="w-5 h-5" />}
                                </div>
-                               {device.name}
-                            </td>
-                            <td className="p-4 text-slate-500">{device.type}</td>
-                            <td className="p-4 text-slate-500">{device.location}</td>
-                            <td className="p-4">
-                               <div className="flex items-center gap-2">
-                                  <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                     <div 
-                                       className={`h-full rounded-full ${device.battery < 20 ? 'bg-red-500' : 'bg-green-500'}`} 
-                                       style={{ width: `${device.battery}%` }}
-                                     ></div>
-                                  </div>
-                                  <span className="text-xs font-medium text-slate-400">{device.battery}%</span>
+                               <div>
+                                  <h4 className="font-black text-slate-900 text-sm">{device.name}</h4>
+                                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">ID: #{device.id.toString().padStart(4, '0')}</p>
                                </div>
-                            </td>
-                            <td className="p-4"><StatusBadge status={device.status} /></td>
-                            <td className="p-4 text-right">
-                               <button className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                                  <Trash2 className="w-4 h-4" />
-                               </button>
-                            </td>
-                         </tr>
-                      ))}
-                   </tbody>
-                </table>
+                            </div>
+                            <div className={`w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm ${
+                               device.status === 'Online' ? 'bg-emerald-500 animate-pulse' : 
+                               device.status === 'Offline' ? 'bg-red-500' : 'bg-amber-500'
+                            }`}></div>
+                         </div>
+
+                         <div className="flex flex-wrap gap-2 mb-4 relative z-10">
+                            <span className="px-2.5 py-1 bg-slate-50 text-slate-600 rounded-lg text-[10px] font-bold border border-slate-100 flex items-center gap-1">
+                               <Activity className="w-3 h-3 text-slate-400" /> {device.type}
+                            </span>
+                            <span className="px-2.5 py-1 bg-slate-50 text-slate-600 rounded-lg text-[10px] font-bold border border-slate-100 flex items-center gap-1">
+                               <MapPin className="w-3 h-3 text-slate-400" /> {device.location}
+                            </span>
+                         </div>
+
+                         <div className="flex items-center justify-between pt-3 border-t border-slate-50 relative z-10">
+                            <div className="flex items-center gap-2">
+                               <div className={`p-1 rounded-md ${device.battery < 20 ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-500'}`}>
+                                  <Battery className="w-3.5 h-3.5" />
+                               </div>
+                               <div className="flex flex-col">
+                                  <span className="text-[10px] font-bold text-slate-400 uppercase">Battery</span>
+                                  <span className={`text-xs font-black ${device.battery < 20 ? 'text-red-500' : 'text-slate-700'}`}>{device.battery}%</span>
+                               </div>
+                            </div>
+                            <button className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors">
+                               <MoreHorizontal className="w-4 h-4" />
+                            </button>
+                         </div>
+                      </div>
+                   ))}
+                   
+                   {/* Add New Placeholder Card */}
+                   <button className="group flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/30 transition-all min-h-[160px]">
+                      <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors mb-3">
+                         <Plus className="w-5 h-5" />
+                      </div>
+                      <span className="text-xs font-black text-slate-500 group-hover:text-emerald-700">Link New Device</span>
+                   </button>
+                </div>
              </div>
-          </Card>
+          </div>
        </div>
     </div>
   );
@@ -2088,6 +2284,24 @@ const MyAccount = () => {
     language: 'English (India)',
     preferredContactTime: '08:00 – 12:00 IST'
   });
+
+  // Hero image carousel (cross-fade between multiple images)
+  const heroImages = [
+    "https://images.unsplash.com/photo-1681226298721-88cdb4096e5f?q=80&w=2533&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1691693809124-d7761a7c4d83?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1707811180403-c22b7ef06476?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1560493676-04071c5f467b?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1695666403934-5929e4690900?q=80&w=2531&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1633410195091-bd66114cef5f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1596337323475-d2bf40338c8a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1728725045728-60c0beb17c02?q=80&w=986&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  ];
+  const [heroIndex, setHeroIndex] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setHeroIndex(i => (i + 1) % heroImages.length), 8000);
+    return () => clearInterval(id);
+  }, []);
 
   // Sync profile data to form inputs
   useEffect(() => {
@@ -2255,194 +2469,289 @@ const MyAccount = () => {
   }, [fullName, email, phone, location, farmName, commPrefs, securityPrefs, preferences]);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-       <SectionHeader title="My Account" subtitle="Manage your personal details and account settings" />
+    <div className="space-y-0 -mt-8 -mx-8 pb-8">
+       {/* Hero Section with Image Carousel Background */}
+       <div className="relative overflow-hidden px-6 pt-6 pb-24 mb-8">
+          {/* Natural Image Background with Ken Burns Effect */}
+          <div className="absolute inset-0 z-0 overflow-hidden">
+            {heroImages.map((src, i) => (
+              <img
+                key={i}
+                src={src}
+                alt={`Farm scene ${i + 1}`}
+                className={`absolute inset-0 w-full h-full object-cover animate-ken-burns transition-opacity duration-1000 ${
+                  heroIndex === i ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+            ))}
+            {/* Overlays for readability */}
+            <div className="absolute inset-0 bg-black/60"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40"></div>
+          </div>
 
-       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          {quickStats.map((stat, idx) => (
-             <Card key={idx} className="space-y-1">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
-                <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
-                <p className="text-xs text-slate-500 font-medium">{stat.detail}</p>
-             </Card>
-          ))}
+          <div className="relative z-10 max-w-6xl mx-auto">
+             <div className="flex items-center justify-between mb-4">
+                <div>
+                   <h1 className="text-2xl font-black text-white mb-1 tracking-tight drop-shadow-lg">Account Center</h1>
+                   <p className="text-emerald-100/80 text-xs font-medium drop-shadow-md">Manage your profile, preferences, and billing</p>
+                </div>
+                {saveMessage && (
+                   <div className={`px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-xl shadow-lg ${
+                      saveMessage.includes('Error') 
+                         ? 'bg-red-500/20 text-red-200 border border-red-400/30' 
+                         : 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/30'
+                   }`}>
+                      {saveMessage}
+                   </div>
+                )}
+             </div>
+
+             {/* Profile Hero Card */}
+             <div className="relative overflow-hidden rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 p-6 shadow-2xl">
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+                   {/* Avatar with Glow Effect */}
+                   <div className="relative group/avatar">
+                      <div className="absolute -inset-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-full opacity-75 group-hover/avatar:opacity-100 blur-xl transition duration-500"></div>
+                      <div className="relative">
+                         {avatarUrl ? (
+                            <img src={avatarUrl} alt="Profile" className="w-24 h-24 rounded-full object-cover ring-4 ring-black/50 shadow-2xl" />
+                         ) : (
+                            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-3xl font-black text-white ring-4 ring-black/50 shadow-inner">
+                               {fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'U'}
+                            </div>
+                         )}
+                         <label className="absolute bottom-1 right-1 p-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full cursor-pointer hover:scale-110 transition-transform shadow-xl border border-white/20 group-hover/avatar:rotate-12">
+                            <Camera className="w-4 h-4" />
+                            <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" disabled={saving} />
+                         </label>
+                      </div>
+                   </div>
+
+                   {/* Profile Info */}
+                   <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                         <h2 className="text-2xl font-black text-white tracking-tight drop-shadow-md">{fullName || 'Your Name'}</h2>
+                         <span className="px-2.5 py-1 bg-gradient-to-r from-amber-300 to-amber-500 text-amber-950 text-[10px] font-black uppercase rounded-full shadow-lg shadow-amber-500/20 border border-amber-200/50">
+                            <Star className="w-2.5 h-2.5 inline mr-1 fill-amber-900" />Pro
+                         </span>
+                      </div>
+                      <p className="text-emerald-100/80 text-sm mb-3 font-medium drop-shadow-sm">{email || userEmail}</p>
+                      <div className="flex flex-wrap gap-2">
+                         <div className="px-3 py-1.5 bg-black/30 backdrop-blur-md rounded-full border border-white/10 hover:bg-black/40 transition-colors">
+                            <span className="text-emerald-100 text-xs font-bold tracking-wide">📍 {location || 'Location not set'}</span>
+                         </div>
+                         <div className="px-3 py-1.5 bg-black/30 backdrop-blur-md rounded-full border border-white/10 hover:bg-black/40 transition-colors">
+                            <span className="text-emerald-100 text-xs font-bold tracking-wide">🌾 {farmName || 'Farm not set'}</span>
+                         </div>
+                         {profile?.created_at && (
+                            <div className="px-3 py-1.5 bg-black/30 backdrop-blur-md rounded-full border border-white/10 hover:bg-black/40 transition-colors">
+                               <span className="text-emerald-100 text-xs font-bold tracking-wide">🎂 Joined {new Date(profile.created_at).toLocaleDateString()}</span>
+                            </div>
+                         )}
+                      </div>
+                   </div>
+
+                   {/* Quick Actions */}
+                   <button 
+                      onClick={handleSaveProfile}
+                      disabled={saving}
+                      className="px-5 py-2.5 bg-white text-emerald-950 hover:bg-emerald-50 font-black rounded-2xl shadow-xl hover:shadow-2xl hover:shadow-white/10 transition-all disabled:opacity-50 flex items-center gap-2 text-sm"
+                   >
+                      {saving ? (
+                         <div className="w-4 h-4 border-2 border-emerald-900/30 border-t-emerald-900 rounded-full animate-spin" />
+                      ) : (
+                         <Save className="w-4 h-4" />
+                      )}
+                      Save Changes
+                   </button>
+                </div>
+             </div>
+          </div>
        </div>
 
-       <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Nav */}
-          <div className="lg:w-64 flex-shrink-0">
-             <div className="bg-white rounded-[24px] shadow-soft p-2 space-y-1">
+       {/* Main Content Area */}
+       <div className="max-w-6xl mx-auto px-6 -mt-8 relative z-10">
+          {/* Stats Bento Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+             {quickStats.map((stat, idx) => (
+                <div key={idx} className="group relative bg-white rounded-2xl p-5 shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-100 overflow-hidden">
+                   <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                   <div className="relative">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{stat.label}</p>
+                      <div className="text-3xl font-black text-slate-900 mb-1">{stat.value}</div>
+                      <p className="text-xs text-slate-500 font-medium">{stat.detail}</p>
+                   </div>
+                </div>
+             ))}
+          </div>
+
+          {/* Horizontal Tabs Navigation */}
+          <div className="bg-white rounded-2xl p-2 shadow-lg mb-8 border border-slate-100">
+             <div className="flex overflow-x-auto scrollbar-hide gap-2">
                 {tabs.map(tab => (
                    <button
-                     key={tab.id}
-                     onClick={() => setActiveTab(tab.id)}
-                     className={`w-full flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                        activeTab === tab.id 
-                        ? 'bg-green-50 text-green-700 shadow-sm' 
-                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
-                     }`}
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
+                         activeTab === tab.id
+                            ? 'bg-emerald-900 text-white shadow-lg shadow-emerald-900/20'
+                            : 'text-slate-600 hover:bg-slate-50'
+                      }`}
                    >
-                      <tab.icon className={`w-4 h-4 mr-3 ${activeTab === tab.id ? 'text-green-600' : 'text-slate-400'}`} />
+                      <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-emerald-400' : 'text-slate-400'}`} />
                       {tab.label}
                    </button>
                 ))}
              </div>
           </div>
 
-          {/* Main Content */}
-          <div className="flex-1 space-y-6">
+          {/* Content Sections */}
+          <div className="space-y-6">
              {activeTab === 'profile' && (
                 <div className="space-y-6">
-                   <Card>
-                      <div className="flex items-start justify-between mb-8">
-                         <div className="flex items-center gap-6">
+                   {/* Profile Highlights Bento */}
+                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {profileHighlights.map((item, idx) => (
+                         <div key={item.label} className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all border border-slate-100 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-full filter blur-3xl opacity-50 group-hover:opacity-100 transition-opacity"></div>
                             <div className="relative">
-                               {avatarUrl ? (
-                                 <img src={avatarUrl} alt="Profile" className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg" />
-                               ) : (
-                                 <div className="w-24 h-24 rounded-full bg-orange-100 flex items-center justify-center text-3xl font-bold text-orange-500 border-4 border-white shadow-lg">
-                                    {fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
-                                 </div>
-                               )}
-                               <label className="absolute bottom-0 right-0 p-2 bg-slate-800 text-white rounded-full hover:bg-slate-700 shadow-md transition-colors cursor-pointer">
-                                  <Camera className="w-4 h-4" />
-                                  <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" disabled={saving} />
-                               </label>
-                            </div>
-                            <div>
-                               <h2 className="text-xl font-bold text-slate-900">{fullName || 'Your Name'}</h2>
-                               <p className="text-slate-500 text-sm">{location || 'Your Location'}</p>
-                               <div className="flex flex-wrap items-center gap-2 mt-2">
-                                  <span className="px-2 py-1 bg-green-50 text-green-700 text-[10px] font-bold uppercase rounded-md flex items-center border border-green-100">
-                                     <BadgeCheck className="w-3 h-3 mr-1" /> Profile Updated
-                                  </span>
-                                  {profile?.created_at && (
-                                    <span className="text-xs text-slate-400">Joined {new Date(profile.created_at).toLocaleDateString()}</span>
-                                  )}
-                               </div>
+                               <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">{item.label}</p>
+                               <p className="text-2xl font-black text-slate-900">{item.value}</p>
                             </div>
                          </div>
-                      </div>
+                      ))}
+                   </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                         {profileHighlights.map((item) => (
-                            <div key={item.label} className="border border-slate-100 rounded-2xl p-4 bg-slate-50/70">
-                               <p className="text-xs text-slate-400 uppercase font-semibold">{item.label}</p>
-                               <p className="text-lg font-bold text-slate-800">{item.value}</p>
-                            </div>
-                         ))}
-                      </div>
-
+                   {/* Form Section - Premium Cards */}
+                   <div className="bg-white rounded-2xl p-8 shadow-lg border border-slate-100">
+                      <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                         <div className="w-1 h-6 bg-emerald-600 rounded-full"></div>
+                         Personal Information
+                      </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                         <div className="space-y-4">
-                            <div>
-                               <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Full Name</label>
+                         <div className="space-y-5">
+                            <div className="group">
+                               <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 group-focus-within:text-emerald-700 transition-colors">Full Name</label>
                                <div className="relative">
-                                  <UserIcon className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                                  <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
+                                  <UserIcon className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" />
+                                  <input 
+                                     type="text" 
+                                     value={fullName} 
+                                     onChange={(e) => setFullName(e.target.value)} 
+                                     className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
+                                     placeholder="Enter your full name"
+                                  />
                                </div>
                             </div>
-                            <div>
-                               <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Email Address</label>
+                            <div className="group">
+                               <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 group-focus-within:text-emerald-700 transition-colors">Email Address</label>
                                <div className="relative">
-                                  <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
+                                  <Mail className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" />
+                                  <input 
+                                     type="email" 
+                                     value={email} 
+                                     onChange={(e) => setEmail(e.target.value)} 
+                                     className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
+                                     placeholder="you@example.com"
+                                  />
                                </div>
                             </div>
-                            <div>
-                               <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Phone Number</label>
+                            <div className="group">
+                               <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 group-focus-within:text-emerald-700 transition-colors">Phone Number</label>
                                <div className="relative">
-                                  <Phone className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                                  <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
+                                  <Phone className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" />
+                                  <input 
+                                     type="tel" 
+                                     value={phone} 
+                                     onChange={(e) => setPhone(e.target.value)} 
+                                     className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
+                                     placeholder="+91 98765 43210"
+                                  />
                                </div>
                             </div>
                          </div>
-                         <div className="space-y-4">
-                            <div>
-                               <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Location</label>
+                         <div className="space-y-5">
+                            <div className="group">
+                               <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 group-focus-within:text-emerald-700 transition-colors">Location</label>
                                <div className="relative">
-                                  <MapPin className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                                  <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
+                                  <MapPin className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" />
+                                  <input 
+                                     type="text" 
+                                     value={location} 
+                                     onChange={(e) => setLocation(e.target.value)} 
+                                     className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
+                                     placeholder="City, State"
+                                  />
                                </div>
                             </div>
-                            <div>
-                               <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Farm Name</label>
+                            <div className="group">
+                               <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 group-focus-within:text-emerald-700 transition-colors">Farm Name</label>
                                <div className="relative">
-                                  <Sprout className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                                  <input type="text" value={farmName} onChange={(e) => setFarmName(e.target.value)} className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" />
+                                  <Sprout className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" />
+                                  <input 
+                                     type="text" 
+                                     value={farmName} 
+                                     onChange={(e) => setFarmName(e.target.value)} 
+                                     className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
+                                     placeholder="Your Farm Name"
+                                  />
                                </div>
                             </div>
-                            <div>
-                               <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Language</label>
+                            <div className="group">
+                               <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 group-focus-within:text-emerald-700 transition-colors">Language</label>
                                <div className="relative">
-                                  <Globe className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-                                  <select value={preferences.language} onChange={(e) => setPreferences(prev => ({ ...prev, language: e.target.value }))} className="w-full pl-9 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all appearance-none">
+                                  <Globe className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" />
+                                  <select 
+                                     value={preferences.language} 
+                                     onChange={(e) => setPreferences(prev => ({ ...prev, language: e.target.value }))} 
+                                     className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:border-emerald-500 focus:bg-white outline-none transition-all appearance-none cursor-pointer"
+                                  >
                                      <option>English (India)</option>
                                      <option>Hindi</option>
                                      <option>Punjabi</option>
-                                   </select>
+                                  </select>
                                </div>
-                            </div>
-                            <div>
-                               <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Preferred contact time</label>
-                               <select value={preferences.preferredContactTime} onChange={(e) => setPreferences(prev => ({ ...prev, preferredContactTime: e.target.value }))} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:border-green-500 focus:ring-2 focus:ring-green-500/20">
-                                  <option>08:00 – 12:00 IST</option>
-                                  <option>12:00 – 16:00 IST</option>
-                                  <option>16:00 – 20:00 IST</option>
-                               </select>
                             </div>
                          </div>
                       </div>
+                   </div>
 
-                      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                         {[
-                            { label: 'Kisan ID', value: 'WB-45-9821', verified: true },
-                            { label: 'PAN / GST', value: 'ABCPK1234F', verified: true },
-                            { label: 'Subsidy wallet', value: '₹3.2L available', verified: false },
-                         ].map((item) => (
-                            <div key={item.label} className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-                               <div>
-                                  <p className="text-xs text-slate-400 uppercase font-semibold">{item.label}</p>
-                                  <p className="text-sm font-bold text-slate-800">{item.value}</p>
-                               </div>
-                               {item.verified ? (
-                                  <BadgeCheck className="w-4 h-4 text-green-500" />
-                               ) : (
-                                  <AlertCircle className="w-4 h-4 text-amber-500" />
-                               )}
+                   {/* Verification Badges */}
+                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {[
+                         { label: 'Kisan ID', value: 'WB-45-9821', verified: true, icon: BadgeCheck },
+                         { label: 'PAN / GST', value: 'ABCPK1234F', verified: true, icon: FileCheck },
+                         { label: 'Subsidy wallet', value: '₹3.2L available', verified: false, icon: IndianRupee },
+                      ].map((item) => (
+                         <div key={item.label} className={`group relative bg-gradient-to-br ${item.verified ? 'from-emerald-50 to-teal-50' : 'from-amber-50 to-orange-50'} rounded-2xl p-5 border-2 ${item.verified ? 'border-emerald-200' : 'border-amber-200'} hover:scale-105 transition-transform`}>
+                            <div className="flex items-start justify-between mb-2">
+                               <p className="text-xs font-black text-slate-600 uppercase tracking-wider">{item.label}</p>
+                               <item.icon className={`w-5 h-5 ${item.verified ? 'text-emerald-600' : 'text-amber-600'}`} />
                             </div>
-                         ))}
-                      </div>
+                            <p className="text-lg font-black text-slate-900">{item.value}</p>
+                            {!item.verified && (
+                               <button className="mt-2 text-xs font-bold text-amber-700 hover:text-amber-800 underline">
+                                  Complete verification →
+                               </button>
+                            )}
+                         </div>
+                      ))}
+                   </div>
 
-                      <div className="mt-8 flex justify-between items-center">
-                         {saveMessage && (
-                           <p className={`text-sm font-semibold ${saveMessage.includes('Error') ? 'text-red-600' : 'text-green-600'}`}>
-                             {saveMessage}
-                           </p>
-                         )}
-                         <button 
-                           onClick={handleSaveProfile}
-                           disabled={saving}
-                           className="ml-auto bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-green-200 transition-colors flex items-center"
-                         >
-                           {saving ? (
-                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                           ) : (
-                             <Save className="w-4 h-4 mr-2" />
-                           )}
-                           Save Changes
-                         </button>
-                      </div>
-                   </Card>
-
-                   <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                      <Card>
-                         <h3 className="font-bold text-slate-800 mb-4">Communication preferences</h3>
+                   {/* Bottom Cards Grid */}
+                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      {/* Communication Preferences */}
+                      <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
+                         <h3 className="text-lg font-black text-slate-900 mb-1 flex items-center gap-2">
+                            <Bell className="w-5 h-5 text-emerald-600" />
+                            Communication
+                         </h3>
+                         <p className="text-xs text-slate-500 mb-5">Manage notification preferences</p>
                          <div className="space-y-4">
                             {commPrefList.map((pref) => (
-                               <div key={pref.key} className="flex items-start justify-between gap-4">
-                                  <div>
-                                     <p className="text-sm font-semibold text-slate-800">{pref.label}</p>
+                               <div key={pref.key} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
+                                  <div className="flex-1">
+                                     <p className="text-sm font-bold text-slate-900">{pref.label}</p>
                                      <p className="text-xs text-slate-500">{pref.desc}</p>
                                   </div>
                                   <Toggle
@@ -2454,27 +2763,42 @@ const MyAccount = () => {
                                </div>
                             ))}
                          </div>
-                      </Card>
+                      </div>
 
-                      <Card>
-                         <h3 className="font-bold text-slate-800 mb-4">Document locker</h3>
-                         <div className="space-y-4">
+                      {/* Document Locker */}
+                      <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
+                         <h3 className="text-lg font-black text-slate-900 mb-1 flex items-center gap-2">
+                            <FileText className="w-5 h-5 text-emerald-600" />
+                            Document Locker
+                         </h3>
+                         <p className="text-xs text-slate-500 mb-5">Your verified documents</p>
+                         <div className="space-y-3">
                             {documents.map((doc, idx) => (
-                               <div key={idx} className="p-3 border border-slate-100 rounded-2xl flex items-center justify-between">
-                                  <div>
-                                     <p className="text-sm font-semibold text-slate-800">{doc.name}</p>
+                               <div key={idx} className="p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors flex items-center gap-3">
+                                  <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                                  <div className="flex-1 min-w-0">
+                                     <p className="text-sm font-bold text-slate-900 truncate">{doc.name}</p>
                                      <p className="text-xs text-slate-500">Updated {doc.updated}</p>
                                   </div>
-                                  <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">{doc.status}</span>
+                                  <span className={`text-[10px] font-black px-2 py-1 rounded-full whitespace-nowrap ${
+                                     doc.status === 'Verified' ? 'bg-emerald-100 text-emerald-700' : 
+                                     doc.status === 'Pending review' ? 'bg-amber-100 text-amber-700' : 
+                                     'bg-slate-200 text-slate-700'
+                                  }`}>
+                                     {doc.status}
+                                  </span>
                                </div>
                             ))}
-                            <button onClick={() => document.getElementById('doc-upload')?.click()} className="mt-2 text-xs font-bold text-green-600 flex items-center hover:text-green-700">
-                               <Upload className="w-4 h-4 mr-1" /> Upload new document
+                            <button 
+                               onClick={() => document.getElementById('doc-upload')?.click()} 
+                               className="w-full mt-3 py-3 border-2 border-dashed border-slate-300 rounded-xl text-sm font-bold text-slate-600 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all flex items-center justify-center gap-2"
+                            >
+                               <Upload className="w-4 h-4" /> Upload Document
                             </button>
-                            <input 
-                               id="doc-upload" 
-                               type="file" 
-                               className="hidden" 
+                            <input
+                               id="doc-upload"
+                               type="file"
+                               className="hidden"
                                onChange={async (e) => {
                                  const file = e.target.files?.[0];
                                  if (file && profile) {
@@ -2490,70 +2814,88 @@ const MyAccount = () => {
                                }}
                             />
                          </div>
-                      </Card>
+                      </div>
 
-                      <Card>
-                         <h3 className="font-bold text-slate-800 mb-4">Recent account activity</h3>
-                         <div className="space-y-4">
+                      {/* Activity Timeline */}
+                      <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
+                         <h3 className="text-lg font-black text-slate-900 mb-1 flex items-center gap-2">
+                            <Activity className="w-5 h-5 text-emerald-600" />
+                            Recent Activity
+                         </h3>
+                         <p className="text-xs text-slate-500 mb-5">Your latest account actions</p>
+                         <div className="space-y-3">
                             {activityTimeline.map((item, idx) => (
-                               <div key={idx} className="flex gap-3">
-                                  <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-semibold text-sm">
+                               <div key={idx} className="flex gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group">
+                                  <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xs group-hover:scale-110 transition-transform flex-shrink-0">
                                      {idx + 1}
                                   </div>
-                                  <div>
-                                     <p className="text-sm font-semibold text-slate-800">{item.title}</p>
+                                  <div className="flex-1 min-w-0">
+                                     <p className="text-sm font-bold text-slate-900">{item.title}</p>
                                      <p className="text-xs text-slate-500">{item.time}</p>
-                                     <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full mt-1">{item.tag}</span>
+                                     <span className="inline-block text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full mt-1">{item.tag}</span>
                                   </div>
                                </div>
                             ))}
                          </div>
-                      </Card>
+                      </div>
                    </div>
-                </div>
-             )}
-
-             {activeTab === 'subscription' && (
-                <div className="space-y-6">
-                   <Card className="bg-gradient-to-r from-slate-900 to-slate-800 text-white border-none">
-                      <div className="flex justify-between items-start">
-                         <div>
-                            <div className="text-xs font-bold text-green-400 uppercase tracking-wider mb-2">Current Plan</div>
-                            <h2 className="text-3xl font-bold mb-1">Pro Plan</h2>
-                            <p className="text-slate-400 text-sm">Next billing on 25 Dec, 2025</p>
-                         </div>
-                         <div className="text-right">
-                            <div className="text-3xl font-bold">₹2,499<span className="text-sm text-slate-400 font-medium">/mo</span></div>
-                         </div>
-                      </div>
-                      <div className="mt-8 grid grid-cols-3 gap-8 border-t border-white/10 pt-6">
-                         <div>
-                            <div className="text-sm font-bold mb-1">1,200</div>
-                            <div className="text-xs text-slate-400 uppercase">Acres Managed</div>
-                         </div>
-                         <div>
-                            <div className="text-sm font-bold mb-1">15</div>
-                            <div className="text-xs text-slate-400 uppercase">Team Members</div>
-                         </div>
-                         <div>
-                            <div className="text-sm font-bold mb-1">50GB</div>
-                            <div className="text-xs text-slate-400 uppercase">Data Storage</div>
-                         </div>
-                      </div>
-                   </Card>
-                   <Card>
-                      <h3 className="font-bold text-slate-800 mb-4">Payment Methods</h3>
-                      <div className="flex items-center justify-between p-4 border border-slate-100 rounded-xl">
-                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-8 bg-slate-800 rounded flex items-center justify-center text-white font-bold text-xs">VISA</div>
+                   <div className="relative bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 rounded-3xl p-8 text-white overflow-hidden shadow-2xl border border-emerald-800/50">
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full filter blur-3xl"></div>
+                      <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-500/10 rounded-full filter blur-3xl"></div>
+                      <div className="relative">
+                         <div className="flex items-center justify-between mb-6">
                             <div>
-                               <p className="font-bold text-slate-800 text-sm">Visa ending in 4242</p>
-                               <p className="text-xs text-slate-500">Expires 12/28</p>
+                               <div className="flex items-center gap-2 mb-2">
+                                  <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
+                                  <span className="text-xs font-black uppercase tracking-wider text-emerald-200">Current Plan</span>
+                               </div>
+                               <h2 className="text-4xl font-black mb-1 tracking-tight">Pro Plan</h2>
+                               <p className="text-emerald-200/80 text-sm font-medium">Next billing • 25 Dec, 2025</p>
+                            </div>
+                            <div className="text-right">
+                               <div className="text-5xl font-black tracking-tight">₹2,499</div>
+                               <div className="text-sm text-emerald-200/80 font-medium">/month</div>
                             </div>
                          </div>
-                         <button className="text-xs font-bold text-slate-500 hover:text-slate-800">Edit</button>
+                         <div className="grid grid-cols-3 gap-6 pt-6 border-t border-white/10">
+                            <div>
+                               <div className="text-2xl font-black mb-1">1,200</div>
+                               <div className="text-xs text-emerald-200/60 uppercase tracking-wider font-bold">Acres Managed</div>
+                            </div>
+                            <div>
+                               <div className="text-2xl font-black mb-1">15</div>
+                               <div className="text-xs text-emerald-200/60 uppercase tracking-wider font-bold">Team Members</div>
+                            </div>
+                            <div>
+                               <div className="text-2xl font-black mb-1">50GB</div>
+                               <div className="text-xs text-emerald-200/60 uppercase tracking-wider font-bold">Data Storage</div>
+                            </div>
+                         </div>
+                         <button className="mt-6 w-full py-3 bg-white text-emerald-900 hover:bg-emerald-50 rounded-xl text-sm font-black uppercase tracking-wider transition-all shadow-lg shadow-black/20">
+                            Upgrade Plan
+                         </button>
                       </div>
-                   </Card>
+                   </div>
+
+                   {/* Payment Methods */}
+                   <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
+                      <h3 className="text-lg font-black text-slate-900 mb-5 flex items-center gap-2">
+                         <CreditCard className="w-5 h-5 text-emerald-600" />
+                         Payment Methods
+                      </h3>
+                      <div className="flex items-center justify-between p-5 border-2 border-slate-200 rounded-2xl hover:border-emerald-300 transition-colors bg-gradient-to-r from-slate-50 to-slate-100">
+                         <div className="flex items-center gap-4">
+                            <div className="w-14 h-10 bg-gradient-to-br from-slate-800 to-black rounded-lg flex items-center justify-center text-white font-black text-sm shadow-lg border border-slate-700">VISA</div>
+                            <div>
+                               <p className="font-black text-slate-900 text-sm">Visa ending in 4242</p>
+                               <p className="text-xs text-slate-500 font-semibold">Expires 12/28</p>
+                            </div>
+                         </div>
+                         <button className="px-4 py-2 bg-white border-2 border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:border-emerald-500 hover:text-emerald-600 transition-colors">
+                            Edit
+                         </button>
+                      </div>
+                   </div>
                 </div>
              )}
 
@@ -2575,7 +2917,7 @@ const MyAccount = () => {
                       {[
                          { name: 'Manish Kumar', role: 'Owner', email: 'kmanish45@gmail.com', avatar: 'bg-orange-100 text-orange-600' },
                          { name: 'Rajesh Singh', role: 'Agronomist', email: 'rajesh.singh@example.com', avatar: 'bg-blue-100 text-blue-600' },
-                         { name: 'Anita Desai', role: 'Viewer', email: 'anita.d@example.com', avatar: 'bg-purple-100 text-purple-600' }
+                         { name: 'Anita Desai', role: 'Viewer', email: 'anita.d@example.com', avatar: 'bg-teal-100 text-teal-600' }
                       ].map((member, i) => (
                          <div key={i} className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl transition-colors">
                             <div className="flex items-center gap-3">
