@@ -97,9 +97,9 @@ export const HelpSupport = () => {
 
       const text = response.text || 'I apologize, but I am unable to process that request right now.';
       setMessages(prev => [...prev, { role: 'model', text }]);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error:', error);
-      setMessages(prev => [...prev, { role: 'model', text: "I'm having trouble connecting to the server. Please try again later." }]);
+      setMessages(prev => [...prev, { role: 'model', text: `I'm having trouble connecting to the server. Please try again later. (Error: ${error.message || error})` }]);
     } finally {
       setIsLoading(false);
     }
