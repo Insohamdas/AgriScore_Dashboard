@@ -72,7 +72,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onContinueDemo }) => {
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-green-50 to-emerald-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-md border border-amber-100">
           <div className="text-center mb-8">
-            <img src="/logo.svg" alt="AgriScore" className="w-20 h-20 mx-auto mb-4" />
+            <img src="/logo.svg" alt="AgriScore" className="w-36 h-36 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-slate-900">AgriScore Dashboard</h1>
             <p className="text-slate-500 mt-2">Demo Mode</p>
           </div>
@@ -109,7 +109,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onContinueDemo }) => {
         <div className={`relative z-10 flex flex-col justify-between p-12 text-white w-full transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <img src="/logo.svg" alt="AgriScore" className="w-16 h-16 drop-shadow-2xl" />
+            <img src="/logo.svg" alt="AgriScore" className="w-32 h-32 drop-shadow-2xl" />
           </div>
 
           {/* Center Content - More Emotional */}
@@ -133,37 +133,37 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onContinueDemo }) => {
             {/* Emotional Feature Cards */}
             <div className="grid grid-cols-2 gap-3 pt-2">
               <div className="flex items-center gap-3 px-4 py-3 bg-black/30 backdrop-blur-sm rounded-xl border border-white/30">
-                <Droplets className="w-5 h-5 text-cyan-300" />
-                <span className="text-sm font-medium text-white">Nurturing Rain</span>
+                <Droplets className="w-5 h-5 text-cyan-300 flex-shrink-0" />
+                <span className="text-sm font-medium text-white whitespace-nowrap">Nurturing Rain</span>
               </div>
               <div className="flex items-center gap-3 px-4 py-3 bg-black/30 backdrop-blur-sm rounded-xl border border-white/30">
-                <Sun className="w-5 h-5 text-yellow-300" />
-                <span className="text-sm font-medium text-white">Golden Sunlight</span>
+                <Sun className="w-5 h-5 text-yellow-300 flex-shrink-0" />
+                <span className="text-sm font-medium text-white whitespace-nowrap">Golden Sunlight</span>
               </div>
               <div className="flex items-center gap-3 px-4 py-3 bg-black/30 backdrop-blur-sm rounded-xl border border-white/30">
-                <Sprout className="w-5 h-5 text-emerald-300" />
-                <span className="text-sm font-medium text-white">Growing Dreams</span>
+                <Sprout className="w-5 h-5 text-emerald-300 flex-shrink-0" />
+                <span className="text-sm font-medium text-white whitespace-nowrap">Growing Dreams</span>
               </div>
               <div className="flex items-center gap-3 px-4 py-3 bg-black/30 backdrop-blur-sm rounded-xl border border-white/30">
-                <Wheat className="w-5 h-5 text-yellow-400" />
-                <span className="text-sm font-medium text-white">Harvest of Hope</span>
+                <Wheat className="w-5 h-5 text-yellow-400 flex-shrink-0" />
+                <span className="text-sm font-medium text-white whitespace-nowrap">Harvest of Hope</span>
               </div>
             </div>
           </div>
 
-          {/* Footer Stats - More Personal */}
-          <div className="flex gap-12 pt-8 border-t border-white/30">
-            <div>
-              <div className="text-3xl font-bold text-yellow-300 drop-shadow-lg">50K+</div>
-              <div className="text-white/80 text-sm mt-1 font-medium">Farming Families</div>
+          {/* Footer Stats - Startup Vision */}
+          <div className="grid grid-cols-3 gap-4 pt-4">
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 text-center hover:bg-white/20 transition-all duration-300 group cursor-default">
+              <div className="text-lg font-bold text-yellow-300 drop-shadow-md mb-1 group-hover:scale-105 transition-transform">Data Driven</div>
+              <div className="text-white/90 text-xs font-medium">Precision Farming</div>
             </div>
-            <div>
-              <div className="text-3xl font-bold text-emerald-300 drop-shadow-lg">2.5M</div>
-              <div className="text-white/80 text-sm mt-1 font-medium">Acres Blessed</div>
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 text-center hover:bg-white/20 transition-all duration-300 group cursor-default">
+              <div className="text-lg font-bold text-emerald-300 drop-shadow-md mb-1 group-hover:scale-105 transition-transform">Sustainable</div>
+              <div className="text-white/90 text-xs font-medium">Eco-Friendly</div>
             </div>
-            <div>
-              <div className="text-3xl font-bold text-orange-300 drop-shadow-lg">35%</div>
-              <div className="text-white/80 text-sm mt-1 font-medium">More Harvest</div>
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 text-center hover:bg-white/20 transition-all duration-300 group cursor-default">
+              <div className="text-lg font-bold text-orange-300 drop-shadow-md mb-1 group-hover:scale-105 transition-transform">Scalable</div>
+              <div className="text-white/90 text-xs font-medium">Future Ready</div>
             </div>
           </div>
         </div>
@@ -175,7 +175,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onContinueDemo }) => {
           
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-10">
-            <img src="/logo.svg" alt="AgriScore" className="w-20 h-20 mx-auto" />
+            <img src="/logo.svg" alt="AgriScore" className="w-36 h-36 mx-auto" />
           </div>
 
           {/* Header */}
@@ -189,16 +189,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onContinueDemo }) => {
           </div>
 
           {/* Forgot Password Helper */}
-          {isForgotPassword && (
+          {isForgotPassword && !successMessage && (
             <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4">
               <div className="flex items-start gap-3">
                 <div className="w-9 h-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
                   <Mail className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-amber-900">We’ll email you a secure reset link</p>
+                  <p className="text-sm font-semibold text-amber-900">Reset your password</p>
                   <p className="text-xs text-amber-800 leading-relaxed mt-1">
-                    Use the email linked to your account. If you don’t see it, check Spam/Promotions.
+                    Enter your registered email address below to receive a secure password reset link.
                   </p>
                 </div>
               </div>
@@ -404,10 +404,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onContinueDemo }) => {
           </p>
 
           {/* Trust - More Emotional */}
-          <div className="mt-10 pt-6 border-t border-orange-200/30 flex justify-center gap-6 text-slate-500 text-xs">
-            <span className="flex items-center gap-1">🌾 50K+ Farmer Family</span>
-            <span className="flex items-center gap-1">💚 Made with Love</span>
-            <span className="flex items-center gap-1">🇮🇳 Proudly Indian</span>
+          <div className="mt-10 pt-6 border-t border-orange-200/30 w-full flex items-center justify-center gap-2 sm:gap-4 text-slate-500 text-[10px] sm:text-xs font-medium">
+            <span className="flex items-center gap-1 whitespace-nowrap">🚀 Smart Farming</span>
+            <span className="w-px h-3 bg-slate-300/50"></span>
+            <span className="flex items-center gap-1 whitespace-nowrap">🛡️ 100% Secure</span>
+            <span className="w-px h-3 bg-slate-300/50"></span>
+            <span className="flex items-center gap-1 whitespace-nowrap">💚 Made with Love</span>
+            <span className="w-px h-3 bg-slate-300/50"></span>
+            <span className="flex items-center gap-1 whitespace-nowrap">🇮🇳 Proudly Indian</span>
           </div>
         </div>
       </div>

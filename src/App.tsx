@@ -59,13 +59,13 @@ const Layout: React.FC<{ children: React.ReactNode; onLogout: () => void }> = ({
             }`}
          >
             <div className="h-20 flex items-center justify-between px-4 border-b border-slate-100 lg:hidden">
-               <img src="/logo.svg" alt="AgriScore Logo" className="w-10 h-10" />
+               <img src="/logo.svg" alt="AgriScore Logo" className="w-14 h-14" />
                <button onClick={() => setIsMobileOpen(false)} className="p-2 text-slate-500">
                   <X className="w-6 h-6" />
                </button>
             </div>
             <div className="hidden lg:flex h-32 items-center justify-center w-full">
-               <img src="/logo.svg" alt="AgriScore Logo" className="w-24 h-24" />
+               <img src="/logo.svg" alt="AgriScore Logo" className="w-32 h-32" />
             </div>
 
             <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto custom-scrollbar">
