@@ -22,7 +22,7 @@ const XIcon = (props: React.ComponentProps<'svg'>) => (
 );
 
 // --- Types ---
-type ViewState = 'chat' | 'knowledge' | 'troubleshoot';
+type ViewState = 'chat' | 'knowledge' | 'troubleshoot' | 'community';
 
 interface Article {
   id: string;
