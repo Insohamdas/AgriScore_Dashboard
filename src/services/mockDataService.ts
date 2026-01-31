@@ -100,8 +100,7 @@ export const MOCK_IRRIGATION: IrrigationEvent[] = [
 ];
 
 export const MOCK_TASKS: Task[] = [
-  { id: 1, name: 'Apply Fertilizer to Corn', date: '20-Nov-25', status: 'Pending' },
-  { id: 2, name: 'Harvest Wheat', date: '25-Nov-25', status: 'In Progress' },
+  { id: 1, name: 'Apply Fertilizer to potato farm', date: '02-Feb-26', status: 'Pending' },
 ];
 
 export const MOCK_HARVEST: HarvestItem[] = [

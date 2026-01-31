@@ -159,7 +159,7 @@ export const Dashboard = () => {
         <div className="lg:col-span-3 bg-white rounded-[24px] p-6 shadow-soft border border-slate-100/50 relative overflow-hidden flex flex-col justify-between min-h-[240px]">
           <div className="flex justify-between items-start z-10">
              <div className="px-3 py-1.5 bg-[#22C55E] text-white rounded-full text-[10px] font-bold uppercase tracking-wide flex items-center shadow-md shadow-green-500/20">
-               <MapPin className="w-3 h-3 mr-1" /> Agarpara
+               <MapPin className="w-3 h-3 mr-1" /> Tarakeswar
              </div>
              <div className="flex bg-[#F1F5F9] rounded-full p-1">
                <button className="w-7 h-7 rounded-full bg-[#22C55E] text-white flex items-center justify-center text-[10px] font-bold shadow-sm">C</button>

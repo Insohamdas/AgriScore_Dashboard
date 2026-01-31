@@ -4,9 +4,22 @@ import {
   ChevronDown, ChevronRight, BookOpen, LifeBuoy, Zap,
   ArrowRight, Sparkles, User, Bot, MoreHorizontal,
   Wifi, Battery, AlertTriangle, CheckCircle, FileText,
-  Thermometer, Droplets, Sprout, ArrowLeft, Send
+  Thermometer, Droplets, Sprout, ArrowLeft, Send,
+  Facebook, Twitter, Instagram, Youtube, MessageCircle, Users, Linkedin, Calendar, Clock, MapPin
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
+
+// --- Custom Icons ---
+const XIcon = (props: React.ComponentProps<'svg'>) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    stroke="none"
+    {...props}
+  >
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+  </svg>
+);
 
 // --- Types ---
 type ViewState = 'chat' | 'knowledge' | 'troubleshoot';
@@ -224,6 +237,104 @@ export const HelpSupport = () => {
     </div>
   );
 
+  const CommunityView = () => (
+    <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 animate-in fade-in zoom-in-95 duration-300">
+      <div className="flex items-center gap-4 mb-8">
+        <button onClick={() => setActiveView('chat')} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+          <ArrowLeft className="w-5 h-5 text-slate-500" />
+        </button>
+        <div>
+          <h2 className="text-xl font-bold text-slate-900">Community Hub</h2>
+          <p className="text-sm text-slate-500">Connect with fellow farmers and experts</p>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {[
+          { name: 'Facebook Group', icon: Facebook, color: 'text-emerald-600', bg: 'bg-emerald-50', link: '#' },
+          { name: 'WhatsApp Community', icon: MessageCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', link: 'https://whatsapp.com/channel/0029VbC5yhMGE56kIAeyBi3K' },
+          { name: 'X (Twitter)', icon: XIcon, color: 'text-emerald-600', bg: 'bg-emerald-50', link: 'https://x.com/AgriScore' },
+          { name: 'YouTube Channel', icon: Youtube, color: 'text-emerald-600', bg: 'bg-emerald-50', link: 'https://youtube.com/@agriscore?si=QgxLB7U__fqCD71c' },
+          { name: 'LinkedIn Official Page', icon: Linkedin, color: 'text-emerald-600', bg: 'bg-emerald-50', link: 'https://www.linkedin.com/company/myagriscore/' },
+          { name: 'Instagram', icon: Instagram, color: 'text-emerald-600', bg: 'bg-emerald-50', link: 'https://www.instagram.com/agriscore.official?igsh=MW5uM2dkanQ0MGZiaA==' },
+        ].map((social, i) => (
+          <a 
+            key={i}
+            href={social.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-emerald-200 hover:shadow-md transition-all group"
+          >
+            <div className={`w-12 h-12 rounded-full ${social.bg} ${social.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+              <social.icon className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-900">{social.name}</h3>
+              <p className="text-xs text-slate-500">Join conversation</p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-300 ml-auto group-hover:text-emerald-500 transition-colors" />
+          </a>
+        ))}
+      </div>
+
+      <div className="mt-8 group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-1 shadow-sm transition-all hover:shadow-md hover:border-emerald-200">
+        <div className="flex flex-col md:flex-row">
+          {/* Date Column */}
+          <div className="flex flex-col items-center justify-center p-6 bg-emerald-50/50 rounded-xl md:w-32 border border-emerald-100/50 text-emerald-900 shrink-0">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600">Feb</span>
+            <span className="text-3xl font-bold">15</span>
+            <span className="text-xs font-medium text-emerald-600/60 mt-1">2026</span>
+          </div>
+
+          {/* Content Column */}
+          <div className="flex-1 p-6 flex flex-col justify-center">
+               <div className="flex items-center gap-2 mb-2">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-medium text-slate-600">
+                     <Users className="w-3 h-3" /> In-Person Event
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-[10px] font-medium text-red-600">
+                     Limited Spots
+                  </span>
+               </div>
+               <h3 className="text-lg font-bold text-slate-900">Sustainable Irrigation Masterclass</h3>
+               <p className="text-sm text-slate-500 mt-1">Join expert agronomists to learn about drip irrigation and water conservation techniques.</p>
+               
+               <div className="flex items-center gap-4 mt-4 text-xs font-medium text-slate-500">
+                  <div className="flex items-center gap-1.5">
+                     <Clock className="w-3.5 h-3.5" />
+                     10:00 AM - 2:00 PM
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                     <MapPin className="w-3.5 h-3.5" />
+                     School Ground, Tarakeswar
+                  </div>
+               </div>
+          </div>
+
+          {/* Action Column */}
+          <div className="flex flex-col justify-center p-6 border-t md:border-t-0 md:border-l border-slate-100 bg-slate-50/50 rounded-xl md:w-48 text-center space-y-3 shrink-0">
+               <div className="text-xs text-slate-500">
+                  <span className="font-bold text-slate-900">145</span> farmers going
+               </div>
+               <div className="flex justify-center -space-x-2 overflow-hidden">
+                 {['SK', 'RM', 'AD', 'KP'].map((initial, i) => (
+                   <div key={i} className={`inline-flex h-8 w-8 items-center justify-center rounded-full ring-2 ring-white text-[10px] font-bold text-white ${
+                     ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-orange-500'][i]
+                   }`}>
+                     {initial}
+                   </div>
+                 ))}
+                 <div className="h-8 w-8 rounded-full ring-2 ring-white bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">+141</div>
+               </div>
+               <button className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm">
+                  Register Free
+               </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#F8F9FC] space-y-8 pb-12">
       {/* Hero Section */}
@@ -299,7 +410,7 @@ export const HelpSupport = () => {
             {[
               { id: 'knowledge', icon: BookOpen, title: 'Knowledge Base', desc: 'Guides & Tutorials', color: 'text-blue-500', bg: 'bg-blue-50' },
               { id: 'troubleshoot', icon: Zap, title: 'Troubleshoot', desc: 'Fix device issues', color: 'text-amber-500', bg: 'bg-amber-50' },
-              { id: 'community', icon: LifeBuoy, title: 'Community', desc: 'Join 10k+ farmers', color: 'text-purple-500', bg: 'bg-purple-50' },
+              { id: 'community', icon: LifeBuoy, title: 'Community', desc: 'Connect with peers', color: 'text-purple-500', bg: 'bg-purple-50' },
             ].map((item, i) => (
               <button 
                 key={i} 
@@ -401,6 +512,7 @@ export const HelpSupport = () => {
 
           {activeView === 'knowledge' && <KnowledgeBaseView />}
           {activeView === 'troubleshoot' && <TroubleshootView />}
+          {activeView === 'community' && <CommunityView />}
         </div>
 
         {/* Sidebar */}
@@ -411,7 +523,7 @@ export const HelpSupport = () => {
             <div className="space-y-4">
               {[
                 { icon: Phone, label: 'Call Us', value: '+91 98765 43210', sub: 'Mon-Fri, 9am-6pm' },
-                { icon: Mail, label: 'Email', value: 'support@agriscore.in', sub: 'Response in 2 hours' },
+                { icon: Mail, label: 'Email', value: 'support@myagriscore.com', sub: 'Response in 2 hours' },
                 { icon: MessageSquare, label: 'Live Chat', value: 'Start a chat', sub: 'Available 24/7' },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer group">

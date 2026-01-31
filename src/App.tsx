@@ -10,7 +10,7 @@ import {
   ChevronDown, MessageSquare, Phone, FlaskConical, Layers, Diamond, Award, Star,
   CreditCard, Users, Link as LinkIcon, Key, History, BadgeCheck, AlertCircle, FileCheck,
   Facebook, IndianRupee, Sunrise, Sunset, Eye, Gauge, Navigation, Umbrella, MoveRight,
-  BookOpen, Bug, LifeBuoy, Upload, Moon
+  BookOpen, Bug, LifeBuoy, Upload, Moon, Edit2, Sparkles, Mic, Loader2, ArrowRight, Bot
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from 'recharts';
 import { GoogleGenAI } from "@google/genai";
@@ -337,7 +337,7 @@ const Dashboard = () => {
         <div className="lg:col-span-3 bg-white rounded-[24px] p-6 shadow-soft border border-slate-100/50 relative overflow-hidden flex flex-col justify-between min-h-[240px]">
           <div className="flex justify-between items-start z-10">
              <div className="px-3 py-1.5 bg-[#22C55E] text-white rounded-full text-[10px] font-bold uppercase tracking-wide flex items-center shadow-md shadow-green-500/20">
-               <MapPin className="w-3 h-3 mr-1" /> Agarpara
+               <MapPin className="w-3 h-3 mr-1" /> Tarakeswar
              </div>
              <div className="flex bg-[#F1F5F9] rounded-full p-1">
                <button className="w-7 h-7 rounded-full bg-[#22C55E] text-white flex items-center justify-center text-[10px] font-bold shadow-sm">C</button>
@@ -825,9 +825,7 @@ const CropDoctor = () => {
    ];
 
    const diseaseAlerts = [
-      { crop: 'Tomato', issue: 'Late Blight risk', severity: 'High', probability: 0.82, recommendation: 'Spray copper-based fungicide within 24 hrs' },
       { crop: 'Potato', issue: 'Leaf miner presence', severity: 'Medium', probability: 0.64, recommendation: 'Release parasitoid wasps / sticky traps' },
-      { crop: 'Wheat', issue: 'Rust spores detected nearby', severity: 'Watch', probability: 0.41, recommendation: 'Plan propiconazole spray if humidity stays high' },
    ];
 
    const recommendedTreatments = [
@@ -882,41 +880,92 @@ const CropDoctor = () => {
          </div>
 
          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <Card className="xl:col-span-2">
-               <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-slate-800 flex items-center gap-2"><Stethoscope className="w-4 h-4 text-green-600" /> Symptom checker</h3>
-                  <span className="text-xs font-semibold text-slate-400">Avg response 90 sec</span>
+            <Card className="xl:col-span-2 overflow-hidden relative">
+               {/* Optional background decoration */}
+               <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+               
+               <div className="flex items-center justify-between mb-6 relative">
+                  <h3 className="font-bold text-slate-800 flex items-center gap-3 text-lg">
+                     <div className="p-2.5 bg-emerald-100 text-emerald-600 rounded-xl">
+                        <Stethoscope className="w-5 h-5" />
+                     </div>
+                     AI Symptom Diagnosis
+                  </h3>
+                  <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold border border-emerald-100 flex items-center gap-1">
+                     <Sparkles className="w-3 h-3" /> Live Assistant
+                  </span>
                </div>
-               <textarea
-                  value={symptomText}
-                  onChange={(e) => setSymptomText(e.target.value)}
-                  rows={4}
-                  placeholder="Describe lesions, color changes, pest sightings, or recent weather events..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
-               />
-               <div className="mt-4 flex flex-wrap gap-3">
-                  <button
-                     onClick={handleAnalyze}
-                     disabled={isAnalyzing || !symptomText.trim()}
-                     className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-green-200"
-                  >
-                     {isAnalyzing ? 'Analyzing...' : 'Analyze symptoms'}
-                  </button>
-                  <button
-                     onClick={() => setSymptomText('')}
-                     className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50"
-                  >
-                     Clear
-                  </button>
-                  <div className="flex-1 min-w-[220px] border border-dashed border-slate-200 rounded-2xl p-4 text-center text-sm text-slate-500">
-                     <Upload className="w-5 h-5 mx-auto mb-2 text-slate-400" />
-                     Drop plant images or lab sheets
+
+               <div className="relative">
+                  <textarea
+                     value={symptomText}
+                     onChange={(e) => setSymptomText(e.target.value)}
+                     rows={5}
+                     placeholder="Describe what you see (e.g., 'Yellow spots on tomato leaves', 'Wilting despite irrigation')..."
+                     className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 text-sm font-medium text-slate-700 focus:outline-none focus:border-emerald-400 focus:bg-white resize-none transition-all placeholder:text-slate-400"
+                  />
+                  
+                  {/* Quick actions inside or below textarea */}
+                  <div className="absolute bottom-3 right-3 flex gap-2">
+                     <button className="p-2 bg-white text-slate-400 hover:text-emerald-600 rounded-lg hover:bg-emerald-50 border border-slate-200 transition-colors" title="Upload Image">
+                        <Camera className="w-4 h-4" />
+                     </button>
+                     <button className="p-2 bg-white text-slate-400 hover:text-emerald-600 rounded-lg hover:bg-emerald-50 border border-slate-200 transition-colors" title="Voice Input">
+                        <Mic className="w-4 h-4" />
+                     </button>
                   </div>
                </div>
+
+               <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex gap-2 w-full overflow-x-auto pb-2 scrollbar-hide sm:w-auto">
+                     {['Yellowing', 'Wilting', 'Spots', 'Pests'].map(tag => (
+                        <button 
+                           key={tag} 
+                           onClick={() => setSymptomText(prev => prev + (prev ? ', ' : '') + tag)}
+                           className="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-xs font-semibold text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all whitespace-nowrap"
+                        >
+                           + {tag}
+                        </button>
+                     ))}
+                  </div>
+                  
+                  <div className="flex gap-3 w-full sm:w-auto justify-end">
+                     <button
+                        onClick={() => setSymptomText('')}
+                        className="px-4 py-2 rounded-xl text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors"
+                        disabled={!symptomText}
+                     >
+                        Clear
+                     </button>
+                     <button
+                        onClick={handleAnalyze}
+                        disabled={isAnalyzing || !symptomText.trim()}
+                        className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-emerald-200 hover:shadow-emerald-300 transition-all flex items-center gap-2"
+                     >
+                        {isAnalyzing ? (
+                           <>
+                              <Loader2 className="w-4 h-4 animate-spin" /> Analyzing...
+                           </>
+                        ) : (
+                           <>
+                              Analyze Symptoms <ArrowRight className="w-4 h-4" />
+                           </>
+                        )}
+                     </button>
+                  </div>
+               </div>
+
                {analysis && (
-                  <div className="mt-6 p-4 bg-green-50 border border-green-100 rounded-2xl text-sm text-slate-700">
-                     <p className="font-semibold text-green-700 mb-1">Preliminary guidance</p>
-                     <p>{analysis}</p>
+                  <div className="mt-6 p-5 bg-emerald-50/50 border border-emerald-100 rounded-2xl animate-in fade-in slide-in-from-top-2">
+                     <div className="flex items-start gap-4">
+                        <div className="p-2 bg-white rounded-lg shadow-sm">
+                           <Bot className="w-5 h-5 text-emerald-600" />
+                        </div>
+                        <div>
+                           <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Diagnosis</p>
+                           <p className="text-sm font-medium text-slate-700 leading-relaxed">{analysis}</p>
+                        </div>
+                     </div>
                   </div>
                )}
             </Card>
@@ -952,7 +1001,11 @@ const CropDoctor = () => {
                            <p className="text-xs text-slate-400 mt-1">{alert.recommendation}</p>
                         </div>
                         <div className="text-right">
-                           <span className="px-3 py-1 rounded-full text-[11px] font-semibold bg-red-50 text-red-600 mb-2 inline-block">{alert.severity}</span>
+                           <span className={`px-3 py-1 rounded-full text-[11px] font-semibold mb-2 inline-block shadow-sm ${
+                              alert.severity === 'High' ? 'bg-red-50 text-red-600' :
+                              alert.severity === 'Medium' ? 'bg-amber-50 text-amber-600' :
+                              'bg-indigo-50 text-indigo-600'
+                           }`}>{alert.severity}</span>
                            <p className="text-xs text-slate-500">Probability: {(alert.probability * 100).toFixed(0)}%</p>
                         </div>
                      </div>
@@ -1043,11 +1096,7 @@ const ReportsAnalytics = () => {
       { name: 'Pest & Disease Tracker', updated: '19 Nov 2025', size: '1.8 MB', type: 'PDF' },
    ];
 
-   const upcomingDecisions = [
-      { title: 'Rabi sowing budget review', due: '28 Nov • 10 AM', owner: 'Finance Desk', tag: 'High Priority' },
-      { title: 'Fertilizer subsidy claim', due: '30 Nov • 4 PM', owner: 'Compliance', tag: 'Awaiting Docs' },
-      { title: 'Export commitment tranche #2', due: '02 Dec • 11 AM', owner: 'Sales', tag: 'On Track' },
-   ];
+
 
    return (
       <div className="space-y-8">
@@ -1211,24 +1260,7 @@ const ReportsAnalytics = () => {
             </Card>
          </div>
 
-         <Card>
-            <div className="flex items-center justify-between mb-4">
-               <h3 className="font-bold text-slate-800">Upcoming decisions</h3>
-               <button className="text-xs font-semibold text-green-600">View calendar</button>
-            </div>
-            <div className="space-y-4">
-               {upcomingDecisions.map((decision, idx) => (
-                  <div key={idx} className="flex items-start gap-4">
-                     <div className="bg-slate-100 text-slate-600 text-xs font-semibold px-3 py-1 rounded-full">{decision.tag}</div>
-                     <div>
-                        <p className="text-sm font-semibold text-slate-800">{decision.title}</p>
-                        <p className="text-xs text-slate-500">{decision.due}</p>
-                        <p className="text-xs text-slate-400 mt-1">Owner: {decision.owner}</p>
-                     </div>
-                  </div>
-               ))}
-            </div>
-         </Card>
+
       </div>
    );
 };
@@ -1386,94 +1418,87 @@ const AgriScorePage = () => {
 
          {/* Hero Score Card */}
          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-white rounded-[2rem] p-6 relative overflow-hidden shadow-xl shadow-slate-200/50 border border-slate-100 group">
-               <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-50 rounded-full blur-3xl -mr-20 -mt-20 animate-pulse opacity-60"></div>
-               <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-50 rounded-full blur-3xl -ml-20 -mb-20 opacity-60"></div>
+            <div className="lg:col-span-2 relative overflow-hidden rounded-[2.5rem] bg-white p-8 shadow-xl shadow-slate-200/50 border border-slate-100 group flex flex-col justify-between">
+               {/* Background Effects - Lighter & Subtler */}
+               <div className="absolute top-0 right-0 w-[30rem] h-[30rem] bg-emerald-50 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none opacity-60"></div>
+               <div className="absolute bottom-0 left-0 w-[20rem] h-[20rem] bg-blue-50 rounded-full blur-[60px] -ml-10 -mb-10 pointer-events-none opacity-60"></div>
                
-               <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
-                  <div className="relative w-32 h-32 flex-shrink-0">
-                     <svg className="w-full h-full transform -rotate-90 drop-shadow-xl">
+               <div className="relative z-10 flex flex-col md:flex-row items-center gap-10 mb-8">
+                  {/* Score Circle - Clean & Modern */}
+                  <div className="relative w-40 h-40 flex-shrink-0">
+                     {/* Background Circle */}
+                     <div className="absolute inset-0 rounded-full border-[10px] border-slate-50"></div>
+                     
+                     <svg className="w-full h-full transform -rotate-90">
+                        <circle 
+                           cx="80" cy="80" r="70" 
+                           stroke="url(#scoreGradientClean)" 
+                           strokeWidth="10" 
+                           fill="transparent" 
+                           strokeDasharray={440} 
+                           strokeDashoffset={440 - (440 * displayScore) / 100} 
+                           strokeLinecap="round"
+                           className="transition-all duration-1000 ease-out drop-shadow-md"
+                        />
                         <defs>
-                           <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                           <linearGradient id="scoreGradientClean" x1="0%" y1="0%" x2="100%" y2="0%">
                               <stop offset="0%" stopColor="#10b981" />
                               <stop offset="100%" stopColor="#059669" />
                            </linearGradient>
                         </defs>
-                        <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="10" fill="transparent" className="text-slate-100" />
-                        <circle 
-                           cx="64" cy="64" r="56" 
-                           stroke="url(#scoreGradient)" 
-                           strokeWidth="10" 
-                           fill="transparent" 
-                           strokeDasharray={352} 
-                           strokeDashoffset={352 - (352 * displayScore) / 100} 
-                           className="transition-all duration-1000 ease-out" 
-                           strokeLinecap="round" 
-                        />
                      </svg>
+                     
                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-3xl font-black tracking-tighter text-slate-900">{displayScore}</span>
-                        <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mt-0.5 bg-emerald-50 px-1.5 py-0.5 rounded-lg">Excellent</span>
+                        <span className="text-4xl font-black tracking-tighter text-slate-900">{displayScore}</span>
+                        <div className="flex items-center gap-1 mt-1 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                           <Star className="w-3 h-3 text-emerald-500 fill-emerald-500" />
+                           <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Excellent</span>
+                        </div>
                      </div>
                   </div>
                   
-                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
-                     <div className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm hover:shadow-md hover:border-emerald-100 transition-all group/card relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-12 h-12 bg-emerald-50 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover/card:scale-150"></div>
-                        <div className="relative z-10">
-                           <div className="flex items-start justify-between mb-1.5">
-                              <div className="p-1.5 bg-emerald-100 rounded-lg text-emerald-600 group-hover/card:scale-110 transition-transform shadow-sm">
-                                 <Award className="w-4 h-4" />
+                  {/* Metrics Grid - Cards Style */}
+                  <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+                     {[
+                        { label: 'Sustainability Tier', value: 'Gold Standard', sub: '92% Match', icon: Award, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
+                        { label: 'Resilience Outlook', value: 'Low Risk', sub: 'Stable State', icon: Shield, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
+                        { label: 'Data Confidence', value: '97% Score', sub: 'Live Sync', icon: Wifi, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100' },
+                        { label: 'Next Audit', value: '22 Days Left', sub: 'Due Feb 22', icon: Calendar, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+                     ].map((item, i) => (
+                        <div key={i} className={`bg-white rounded-2xl p-4 border ${item.border} shadow-sm hover:shadow-md transition-all group/card cursor-pointer relative overflow-hidden`}>
+                           <div className={`absolute top-0 right-0 w-16 h-16 ${item.bg} rounded-bl-[3rem] opacity-50 transition-transform group-hover/card:scale-110`}></div>
+                           
+                           <div className="relative z-10">
+                              <div className="flex items-start justify-between mb-2">
+                                  <div className={`p-2 rounded-xl ${item.bg} ${item.color} shadow-sm`}>
+                                      <item.icon className="w-5 h-5" />
+                                  </div>
                               </div>
-                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">92% Match</span>
+                              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">{item.label}</p>
+                              <div className="flex items-end justify-between">
+                                 <p className="text-lg font-black text-slate-900 tracking-tight leading-none">{item.value}</p>
+                                 <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${item.bg} ${item.color}`}>{item.sub}</span>
+                              </div>
                            </div>
-                           <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-0.5">Sustainability Tier</p>
-                           <p className="text-lg font-black text-slate-900 tracking-tight">Gold Standard</p>
                         </div>
+                     ))}
+                  </div>
+               </div>
+               
+               {/* Footer Insight */}
+               <div className="relative z-10 pt-6 border-t border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                     <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 animate-pulse">
+                        <SparklesIcon className="w-5 h-5" />
                      </div>
-
-                     <div className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-100 transition-all group/card relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-12 h-12 bg-blue-50 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover/card:scale-150"></div>
-                        <div className="relative z-10">
-                           <div className="flex items-start justify-between mb-1.5">
-                              <div className="p-1.5 bg-blue-100 rounded-lg text-blue-600 group-hover/card:scale-110 transition-transform shadow-sm">
-                                 <Shield className="w-4 h-4" />
-                              </div>
-                              <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-100">Stable</span>
-                           </div>
-                           <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-0.5">Resilience Outlook</p>
-                           <p className="text-lg font-black text-slate-900 tracking-tight">Low Risk</p>
-                        </div>
-                     </div>
-
-                     <div className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm hover:shadow-md hover:border-purple-100 transition-all group/card relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-12 h-12 bg-purple-50 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover/card:scale-150"></div>
-                        <div className="relative z-10">
-                           <div className="flex items-start justify-between mb-1.5">
-                              <div className="p-1.5 bg-purple-100 rounded-lg text-purple-600 group-hover/card:scale-110 transition-transform shadow-sm">
-                                 <Wifi className="w-4 h-4" />
-                              </div>
-                              <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded-full border border-purple-100">Syncing</span>
-                           </div>
-                           <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-0.5">Data Confidence</p>
-                           <p className="text-lg font-black text-slate-900 tracking-tight">97% Score</p>
-                        </div>
-                     </div>
-
-                     <div className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm hover:shadow-md hover:border-amber-100 transition-all group/card relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-12 h-12 bg-amber-50 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover/card:scale-150"></div>
-                        <div className="relative z-10">
-                           <div className="flex items-start justify-between mb-1.5">
-                              <div className="p-1.5 bg-amber-100 rounded-lg text-amber-600 group-hover/card:scale-110 transition-transform shadow-sm">
-                                 <Calendar className="w-4 h-4" />
-                              </div>
-                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-100">Nov 28</span>
-                           </div>
-                           <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-0.5">Next Audit</p>
-                           <p className="text-lg font-black text-slate-900 tracking-tight">12 Days Left</p>
-                        </div>
+                     <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">AI Insight</p>
+                        <p className="text-sm font-bold text-slate-700">Score trending up <span className="text-emerald-600">5%</span> due to improved soil health in North Zone.</p>
                      </div>
                   </div>
+                  <button className="hidden sm:flex items-center text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 px-3 py-1.5 rounded-lg transition-colors">
+                     View Analysis <ArrowUp className="w-3 h-3 ml-1" />
+                  </button>
                </div>
             </div>
 
@@ -1637,23 +1662,45 @@ const AgriScorePage = () => {
                   </h3>
                   <button className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline">Sync Calendar</button>
                </div>
-               <div className="relative pl-6 space-y-8 before:absolute before:left-[23px] before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-100">
+               
+               <div className="relative space-y-0 ml-4">
+                  {/* Continuous Line */}
+                  <div className="absolute top-4 bottom-4 left-[5px] w-0.5 bg-slate-100"></div>
+
                   {auditTimeline.map((event, idx) => (
-                     <div key={idx} className="relative flex items-start gap-6 group">
-                        <div className="absolute left-0 w-3 h-3 rounded-full bg-white border-[3px] border-slate-300 group-hover:border-blue-500 group-hover:scale-125 transition-all z-10 mt-1.5 shadow-sm"></div>
-                        <div className="flex-1 p-5 rounded-2xl bg-slate-50 border border-slate-100 group-hover:bg-white group-hover:shadow-lg group-hover:shadow-slate-200/50 transition-all cursor-pointer">
-                           <div className="flex justify-between items-start mb-2">
-                              <p className="text-sm font-black text-slate-900">{event.title}</p>
-                              <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wide ${
-                                 event.status === 'Ready' ? 'bg-emerald-100 text-emerald-600' : 
-                                 event.status === 'Docs in draft' ? 'bg-amber-100 text-amber-600' : 'bg-slate-200 text-slate-500'
-                              }`}>
-                                 {event.status}
-                              </span>
-                           </div>
-                           <p className="text-xs font-bold text-slate-500 mb-3">{event.due}</p>
-                           <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                              <UserIcon className="w-3.5 h-3.5" /> {event.owner}
+                     <div key={idx} className="relative pl-10 pb-8 last:pb-0 group">
+                        {/* Timeline Dot */}
+                        <div className="absolute left-0 top-1.5 w-3 h-3 rounded-full bg-white border-[3px] border-slate-300 group-hover:border-blue-500 group-hover:scale-125 transition-all z-10 shadow-sm"></div>
+                        
+                        {/* Card Content */}
+                        <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 group-hover:bg-white group-hover:shadow-lg group-hover:shadow-slate-200/50 transition-all cursor-pointer relative overflow-hidden">
+                           <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-slate-100 to-transparent rounded-bl-full opacity-50 transition-all group-hover:scale-150"></div>
+                           
+                           <div className="relative z-10">
+                              <div className="flex justify-between items-start mb-2">
+                                 <h4 className="text-sm font-black text-slate-900 group-hover:text-blue-700 transition-colors">{event.title}</h4>
+                                 <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wide shadow-sm ${
+                                    event.status === 'Ready' ? 'bg-emerald-100 text-emerald-600' : 
+                                    event.status === 'Docs in draft' ? 'bg-amber-100 text-amber-600' : 'bg-slate-200 text-slate-500'
+                                 }`}>
+                                    {event.status}
+                                 </span>
+                              </div>
+                              
+                              <p className="text-xs font-bold text-slate-500 mb-4 flex items-center gap-2">
+                                 <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                                 {event.due}
+                              </p>
+                              
+                              <div className="flex items-center justify-between pt-3 border-t border-slate-200/50">
+                                 <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                    <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-slate-500">
+                                       <UserIcon className="w-3 h-3" />
+                                    </div>
+                                    {event.owner}
+                                 </div>
+                                 <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+                              </div>
                            </div>
                         </div>
                      </div>
@@ -1673,11 +1720,9 @@ const TaskManagement = () => {
   const [filter, setFilter] = useState('All');
   
   useEffect(() => {
+    // Fetch tasks
     api.getTasks().then(data => {
-        setTasks([...data, 
-            { id: 3, name: 'Inspect Irrigation System', date: '26-Nov-25', status: 'Pending' },
-            { id: 4, name: 'Soil pH Testing', date: '28-Nov-25', status: 'Scheduled' }
-        ] as any);
+        setTasks(data);
     });
   }, []);
 
@@ -1712,7 +1757,7 @@ const TaskManagement = () => {
                     </div>
                  ))}
                  {tasks.filter(t => t.status === status).length === 0 && (
-                    <div className="text-center py-4 text-slate-400 text-sm">No tasks</div>
+                    <div className="text-center py-4 text-slate-400 text-sm">No task</div>
                  )}
               </div>
            </Card>
@@ -1774,8 +1819,8 @@ const WeatherPage = () => {
   const [loading, setLoading] = useState(true);
   const [tempTrend, setTempTrend] = useState<any[]>([]);
 
-  const LAT = 22.68;
-  const LON = 88.38;
+  const LAT = 22.88;
+  const LON = 88.02;
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -1886,7 +1931,7 @@ const WeatherPage = () => {
                   <div>
                       <div className="flex items-center space-x-2 bg-white/20 w-fit px-4 py-1.5 rounded-full backdrop-blur-sm border border-white/10 mb-6">
                           <MapPin className="w-4 h-4" />
-                          <span className="text-sm font-bold tracking-wide">AGARPARA, WEST BENGAL</span>
+                          <span className="text-sm font-bold tracking-wide">TARAKESWAR, WEST BENGAL</span>
                       </div>
                       
                       <div className="flex items-center gap-6">
@@ -2078,7 +2123,7 @@ const FarmSettings = () => {
    });
 
   const devices = [
-    { id: 1, name: 'Node-WZ-01', type: 'Sensor Node', status: 'Online', battery: 88, location: 'North Field' },
+    { id: 1, name: 'Node-WZ-01', type: 'Sensor Node', status: 'Online', battery: 98, location: 'North Field' },
     { id: 2, name: 'Node-WZ-02', type: 'Sensor Node', status: 'Maintenance', battery: 12, location: 'North Field' },
    { id: 3, name: 'Node-RS-01', type: 'Weather Station', status: 'Offline', battery: 95, location: 'River Side' },
     { id: 4, name: 'Node-HT-01', type: 'Gateway', status: 'Offline', battery: 0, location: 'Hilltop' },
@@ -2344,10 +2389,10 @@ const MyAccount = () => {
   ];
 
   const quickStats = [
-     { label: 'Plan tier', value: 'Pro', detail: 'Renews 25 Dec' },
+     { label: 'Plan tier', value: 'Pro', detail: 'Renews 22 Nov' },
      { label: 'Farms linked', value: '08', detail: 'West Bengal cluster' },
      { label: 'Usage this month', value: '72%', detail: 'Data & automation' },
-     { label: 'Last sync', value: '2h ago', detail: 'All devices healthy' },
+     { label: 'Last sync', value: 'Live', detail: 'All devices healthy' },
   ];
 
   const profileHighlights = [
@@ -2376,8 +2421,8 @@ const MyAccount = () => {
   ];
 
   const apiTokens = [
-     { name: 'Field Ops App', created: '05 Oct 2025', lastUsed: '2 days ago', scope: 'read:fields write:tasks' },
-     { name: 'Partner Coop', created: '18 Sep 2025', lastUsed: '6 hours ago', scope: 'read:analytics' },
+     { name: 'Field Ops App', created: '05 Dec 2025', lastUsed: '2 days ago', scope: 'read:fields write:tasks' },
+     { name: 'Partner Coop', created: '18 Dec 2025', lastUsed: '6 hours ago', scope: 'read:analytics' },
   ];
 
   const commPrefList = [
@@ -2538,14 +2583,14 @@ const MyAccount = () => {
                       <p className="text-emerald-100/80 text-sm mb-3 font-medium drop-shadow-sm">{email || userEmail}</p>
                       <div className="flex flex-wrap gap-2">
                          <div className="px-3 py-1.5 bg-black/30 backdrop-blur-md rounded-full border border-white/10 hover:bg-black/40 transition-colors">
-                            <span className="text-emerald-100 text-xs font-bold tracking-wide">📍 {location || 'Location not set'}</span>
+                            <span className="text-emerald-100 text-xs font-bold tracking-wide">📍 {location || 'Tarakeswar'}</span>
                          </div>
                          <div className="px-3 py-1.5 bg-black/30 backdrop-blur-md rounded-full border border-white/10 hover:bg-black/40 transition-colors">
-                            <span className="text-emerald-100 text-xs font-bold tracking-wide">🌾 {farmName || 'Farm not set'}</span>
+                            <span className="text-emerald-100 text-xs font-bold tracking-wide">🌾 {farmName || 'All Set Complete'}</span>
                          </div>
                          {profile?.created_at && (
                             <div className="px-3 py-1.5 bg-black/30 backdrop-blur-md rounded-full border border-white/10 hover:bg-black/40 transition-colors">
-                               <span className="text-emerald-100 text-xs font-bold tracking-wide">🎂 Joined {new Date(profile.created_at).toLocaleDateString()}</span>
+                               <span className="text-emerald-100 text-xs font-bold tracking-wide">🎂 Joined 15th Nov, 2025</span>
                             </div>
                          )}
                       </div>
@@ -2899,6 +2944,154 @@ const MyAccount = () => {
                 </div>
              )}
 
+             {activeTab === 'subscription' && (
+                <div className="space-y-6">
+                   {/* Current Plan Overview */}
+                   <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 p-8 text-white shadow-xl">
+                      <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl"></div>
+                      <div className="absolute bottom-0 left-0 -ml-16 -mb-16 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl"></div>
+                      
+                      <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+                         <div>
+                            <div className="flex items-center gap-2 mb-2">
+                               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-400 text-amber-950 uppercase tracking-wide">Current Plan</span>
+                               <span className="text-sm font-medium text-slate-300">Billed monthly</span>
+                            </div>
+                            <h2 className="text-3xl font-black tracking-tight mb-2">AgriScore Pro</h2>
+                            <p className="text-slate-300 max-w-md">You are on the Pro plan with advanced analytics, 3 team members, and unlimited historical data.</p>
+                         </div>
+                         <div className="flex flex-col items-start md:items-end">
+                            <div className="flex items-baseline gap-1">
+                               <span className="text-4xl font-black">₹2,499</span>
+                               <span className="text-slate-400 font-medium">/ month</span>
+                            </div>
+                            <p className="text-sm text-emerald-400 font-medium mt-1">Renews on Nov 22, 2026</p>
+                            <div className="mt-4 flex gap-3">
+                               <button className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-bold border border-white/10 transition-colors">
+                                  Change Plan
+                               </button>
+                               <button className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-bold shadow-lg shadow-emerald-500/20 transition-all">
+                                  Upgrade to Enterprise
+                               </button>
+                            </div>
+                         </div>
+                      </div>
+
+                      {/* Usage Bars */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 pt-8 border-t border-white/10">
+                         <div>
+                            <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-2">
+                               <span className="text-slate-400">Team Seats</span>
+                               <span className="text-white">2 / 5 Used</span>
+                            </div>
+                            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                               <div className="h-full bg-blue-400 w-2/5"></div>
+                            </div>
+                         </div>
+                         <div>
+                            <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-2">
+                               <span className="text-slate-400">Data Storage</span>
+                               <span className="text-white">12.5GB / 50GB</span>
+                            </div>
+                            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                               <div className="h-full bg-emerald-400 w-1/4"></div>
+                            </div>
+                         </div>
+                         <div>
+                            <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-2">
+                               <span className="text-slate-400">SMS Alerts</span>
+                               <span className="text-white">850 / 1000</span>
+                            </div>
+                            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                               <div className="h-full bg-amber-400 w-[85%]"></div>
+                            </div>
+                         </div>
+                      </div>
+                   </div>
+
+                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      {/* Payment Method */}
+                      <Card className="lg:col-span-1">
+                         <h3 className="font-bold text-slate-900 mb-4">Payment Method</h3>
+                         <div className="p-4 rounded-xl border-2 border-slate-100 bg-slate-50 relative group overflow-hidden">
+                            <div className="relative z-10">
+                               <div className="flex items-center justify-between mb-4">
+                                  <div className="h-8 w-12 rounded bg-white border border-slate-200 flex items-center justify-center">
+                                     <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-3" />
+                                  </div>
+                                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">Primary</span>
+                               </div>
+                               <p className="font-bold text-slate-800 mb-1">•••• •••• •••• 4242</p>
+                               <p className="text-xs text-slate-500">Expires 12/2028</p>
+                            </div>
+                            <button className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                               <Edit2 className="w-4 h-4" />
+                            </button>
+                         </div>
+                         <button className="mt-4 w-full py-2.5 border-2 border-dashed border-slate-200 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-700 hover:border-slate-300 transition-colors flex items-center justify-center gap-2">
+                            <Plus className="w-4 h-4" /> Add Payment Method
+                         </button>
+                      </Card>
+
+                      {/* Invoice History */}
+                      <Card className="lg:col-span-2">
+                         <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-bold text-slate-900">Billing History</h3>
+                            <button className="text-xs font-bold text-emerald-600 hover:text-emerald-700">Download All</button>
+                         </div>
+                         <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                               <thead>
+                                  <tr className="border-b border-slate-100 text-xs text-slate-400 font-bold uppercase tracking-wider">
+                                     <th className="py-3 px-2">Invoice</th>
+                                     <th className="py-3 px-2">Date</th>
+                                     <th className="py-3 px-2">Amount</th>
+                                     <th className="py-3 px-2">Status</th>
+                                     <th className="py-3 px-2 text-right">Download</th>
+                                  </tr>
+                               </thead>
+                               <tbody>
+                                  {[
+                                     { id: 'INV-2024-001', date: 'Nov 22, 2025', amount: '₹2,499.00', status: 'Paid' },
+                                     { id: 'INV-2023-012', date: 'Nov 22, 2024', amount: '₹2,100.00', status: 'Paid' },
+                                     { id: 'INV-2022-012', date: 'Nov 22, 2023', amount: '₹1,800.00', status: 'Paid' },
+                                  ].map((invoice) => (
+                                     <tr key={invoice.id} className="border-b border-slate-50 group hover:bg-slate-50/50 transition-colors">
+                                        <td className="py-3 px-2 text-sm font-bold text-slate-700">{invoice.id}</td>
+                                        <td className="py-3 px-2 text-sm text-slate-500">{invoice.date}</td>
+                                        <td className="py-3 px-2 text-sm font-bold text-slate-900">{invoice.amount}</td>
+                                        <td className="py-3 px-2">
+                                           <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600">
+                                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                                              {invoice.status}
+                                           </span>
+                                        </td>
+                                        <td className="py-3 px-2 text-right">
+                                           <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors">
+                                              <Download className="w-4 h-4" />
+                                           </button>
+                                        </td>
+                                     </tr>
+                                  ))}
+                               </tbody>
+                            </table>
+                         </div>
+                      </Card>
+                   </div>
+                   
+                   {/* Enterprise Banner */}
+                   <div className="rounded-2xl bg-gradient-to-r from-indigo-50 to-purple-50 p-6 border border-indigo-100 flex items-center justify-between gap-6">
+                      <div>
+                         <h4 className="font-bold text-indigo-900 text-lg mb-1">Need a custom plan?</h4>
+                         <p className="text-indigo-700/80 text-sm">Get dedicated support, custom integrations, and unlimited team members for large scale operations.</p>
+                      </div>
+                      <button className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition-all whitespace-nowrap">
+                         Contact Sales
+                      </button>
+                   </div>
+                </div>
+             )}
+
              {activeTab === 'team' && (
                 <Card>
                    <div className="flex justify-between items-center mb-6">
@@ -2916,8 +3109,7 @@ const MyAccount = () => {
                    <div className="space-y-4">
                       {[
                          { name: 'Manish Kumar', role: 'Owner', email: 'kmanish45@gmail.com', avatar: 'bg-orange-100 text-orange-600' },
-                         { name: 'Rajesh Singh', role: 'Agronomist', email: 'rajesh.singh@example.com', avatar: 'bg-blue-100 text-blue-600' },
-                         { name: 'Anita Desai', role: 'Viewer', email: 'anita.d@example.com', avatar: 'bg-teal-100 text-teal-600' }
+                         { name: 'Anita Desai', role: 'Viewer', email: 'anita564@gmail.com', avatar: 'bg-teal-100 text-teal-600' }
                       ].map((member, i) => (
                          <div key={i} className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl transition-colors">
                             <div className="flex items-center gap-3">
@@ -3032,11 +3224,11 @@ const MyAccount = () => {
                       <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-500">
                          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                             <p className="font-semibold text-slate-800 text-sm">Last password change</p>
-                            <p>14 Aug 2025</p>
+                            <p>14 Dec 2025</p>
                          </div>
                          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                             <p className="font-semibold text-slate-800 text-sm">Recovery email</p>
-                            <p>backup@agriscore.in</p>
+                            <p>backup@myagriscore.com</p>
                          </div>
                          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                             <p className="font-semibold text-slate-800 text-sm">Trusted devices</p>
@@ -3058,13 +3250,13 @@ const MyAccount = () => {
                          </thead>
                          <tbody>
                             <tr className="border-b border-slate-50">
-                               <td className="px-4 py-4 font-medium text-slate-700 flex items-center gap-2"><Smartphone className="w-4 h-4" /> iPhone 14 Pro</td>
-                               <td className="px-4 py-4 text-slate-500">Agarpara, India</td>
+                               <td className="px-4 py-4 font-medium text-slate-700 flex items-center gap-2"><Globe className="w-4 h-4" /> Chrome / Windows</td>
+                               <td className="px-4 py-4 text-slate-500">Tarakeswar, India</td>
                                <td className="px-4 py-4 text-slate-500">Just now</td>
                                <td className="px-4 py-4"><span className="text-green-600 font-bold text-xs bg-green-50 px-2 py-1 rounded">Active</span></td>
                             </tr>
                             <tr>
-                               <td className="px-4 py-4 font-medium text-slate-700 flex items-center gap-2"><Globe className="w-4 h-4" /> Chrome / Windows</td>
+                               <td className="px-4 py-4 font-medium text-slate-700 flex items-center gap-2"><Smartphone className="w-4 h-4" /> iPhone 14 Pro</td>
                                <td className="px-4 py-4 text-slate-500">Kolkata, India</td>
                                <td className="px-4 py-4 text-slate-500">Yesterday, 10:23 PM</td>
                                <td className="px-4 py-4"><span className="text-slate-400 font-bold text-xs bg-slate-50 px-2 py-1 rounded">Logged Out</span></td>
@@ -3109,6 +3301,10 @@ const SoilWater = () => {
     { label: 'Total Rainfall', value: '125', unit: 'mm', icon: CloudRain, color: 'bg-blue-600' },
     { label: 'Ammonia Level', value: '0.8', unit: 'ppm', icon: Activity, color: 'bg-yellow-500' },
     { label: 'GPS Satellites', value: '12', unit: '', icon: MapPin, color: 'bg-purple-500' },
+  ];
+
+  const connectedNodes = [
+     { name: 'Node-WZ-01', id: '#0001', type: 'Sensor Node', location: 'North Field', battery: 98, status: 'Online', lastPing: 'Just now' },
   ];
 
   const trendsData = [
@@ -3296,6 +3492,54 @@ const SoilWater = () => {
                 </div>
              </Card>
            ))}
+        </div>
+
+        {/* Connected Nodes Section */}
+        <div>
+           <div className="mb-5 pl-1 border-l-4 border-emerald-500">
+              <h2 className="text-lg font-bold text-slate-800 ml-3">Sensor Nodes</h2>
+              <p className="text-xs text-slate-500 ml-3">Real-time status of deployed hardware</p>
+           </div>
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {connectedNodes.map((node, i) => (
+                 <Card key={i} className="p-4 relative hover:border-emerald-200 transition-colors group">
+                    <div className="flex justify-between items-start mb-3">
+                       <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-slate-800 text-white flex items-center justify-center shadow-lg shadow-slate-500/10">
+                             <Wifi className="w-5 h-5" />
+                          </div>
+                          <div>
+                             <h4 className="font-bold text-slate-800 text-sm">{node.name}</h4>
+                             <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">ID: {node.id}</p>
+                          </div>
+                       </div>
+                       <span className="flex h-2.5 w-2.5 relative">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                       </span>
+                    </div>
+                    
+                    <div className="space-y-2 mt-4">
+                       <div className="flex justify-between items-center text-xs">
+                          <span className="text-slate-500 font-medium">Type</span>
+                          <span className="font-bold text-slate-700">{node.type}</span>
+                       </div>
+                       <div className="flex justify-between items-center text-xs">
+                          <span className="text-slate-500 font-medium">Location</span>
+                          <span className="font-bold text-slate-700">{node.location}</span>
+                       </div>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between">
+                       <div className="flex items-center gap-1.5">
+                          <Battery className={`w-3.5 h-3.5 ${node.battery > 20 ? 'text-emerald-500' : 'text-red-500'}`} />
+                          <span className="text-xs font-bold text-slate-700">{node.battery}%</span>
+                       </div>
+                       <span className="text-[10px] font-medium text-slate-400">{node.lastPing}</span>
+                    </div>
+                 </Card>
+              ))}
+           </div>
         </div>
 
         {/* Device Section */}
