@@ -334,103 +334,121 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Weather Card */}
-        <div className="lg:col-span-3 bg-white rounded-[24px] p-6 shadow-soft border border-slate-100/50 relative overflow-hidden flex flex-col justify-between min-h-[240px]">
+        <div className="lg:col-span-3 bg-gradient-to-br from-[#3B82F6] to-[#2563EB] rounded-[24px] p-6 shadow-xl shadow-blue-200 relative overflow-hidden flex flex-col justify-between min-h-[240px] text-white">
           <div className="flex justify-between items-start z-10">
-             <div className="px-3 py-1.5 bg-[#22C55E] text-white rounded-full text-[10px] font-bold uppercase tracking-wide flex items-center shadow-md shadow-green-500/20">
+             <div className="px-3 py-1.5 bg-white/20 backdrop-blur-md text-white rounded-full text-[10px] font-bold uppercase tracking-wide flex items-center shadow-sm border border-white/10">
                <MapPin className="w-3 h-3 mr-1" /> Tarakeswar
              </div>
-             <div className="flex bg-[#F1F5F9] rounded-full p-1">
-               <button className="w-7 h-7 rounded-full bg-[#22C55E] text-white flex items-center justify-center text-[10px] font-bold shadow-sm">C</button>
-               <button className="w-7 h-7 rounded-full text-slate-400 flex items-center justify-center text-[10px] font-medium hover:text-slate-600">F</button>
+             <div className="flex bg-white/10 backdrop-blur-md rounded-full p-1 border border-white/10">
+               <button className="w-7 h-7 rounded-full bg-white text-blue-600 flex items-center justify-center text-[10px] font-bold shadow-sm">C</button>
+               <button className="w-7 h-7 rounded-full text-blue-100 flex items-center justify-center text-[10px] font-medium hover:bg-white/10 hover:text-white transition-colors">F</button>
              </div>
           </div>
           
           <div className="z-10 mt-4">
-            <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">Tuesday</p>
-            <p className="text-slate-300 text-[11px]">25 Nov, 2025</p>
+            <p className="text-blue-100 text-xs font-medium uppercase tracking-wider">Tuesday</p>
+            <p className="text-white/80 text-[11px]">25 Nov, 2025</p>
             
             <div className="flex items-start mt-3">
-               <span className="text-[56px] font-medium text-slate-800 leading-none tracking-tight">24</span>
-               <span className="text-xl text-slate-400 mt-1 ml-1 font-medium">°C</span>
+               <span className="text-[56px] font-bold text-white leading-none tracking-tight drop-shadow-sm">24</span>
+               <span className="text-xl text-blue-100 mt-1 ml-1 font-medium">°C</span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-2 font-medium">High: 25 &nbsp;•&nbsp; Low: 12</p>
+            <p className="text-[11px] text-blue-100 mt-2 font-medium">High: 25 &nbsp;•&nbsp; Low: 12</p>
           </div>
 
-          <div className="z-10 mt-4 border-t border-slate-50 pt-4">
-             <p className="text-slate-400 text-[11px]">Feels Like 26</p>
-             <p className="text-slate-700 font-semibold text-sm">Cloudy</p>
+          <div className="z-10 mt-4 border-t border-white/10 pt-4">
+             <p className="text-blue-100 text-[11px]">Feels Like 26</p>
+             <p className="text-white font-semibold text-sm">Cloudy</p>
           </div>
 
           {/* Weather Decor */}
           <div className="absolute top-16 -right-6 pointer-events-none">
-             <Cloud className="w-32 h-32 text-[#F1F5F9]/80 fill-white" />
-             <Sun className="w-12 h-12 text-yellow-400 fill-yellow-400 absolute top-2 right-8 animate-pulse" />
+             <Cloud className="w-32 h-32 text-white/10 fill-white/10" />
+             <Sun className="w-12 h-12 text-yellow-300 fill-yellow-300 absolute top-2 right-8 animate-pulse opacity-80" />
           </div>
         </div>
 
         {/* Production Overview Gauge */}
-        <Card className="lg:col-span-5 flex flex-col">
-          <div className="flex justify-between items-center mb-2">
-             <h3 className="text-[15px] font-bold text-slate-800">Production Overview</h3>
-             <div className="relative">
-                <select className="appearance-none bg-[#F8F9FC] border-none text-slate-500 text-[11px] font-medium rounded-lg pl-3 pr-7 py-1.5 outline-none cursor-pointer hover:bg-slate-100 transition-colors">
-                    <option>Yearly</option>
-                </select>
-                <ArrowDown className="w-3 h-3 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <Card className="lg:col-span-5 flex flex-col relative overflow-hidden">
+          <div className="flex justify-between items-start mb-6">
+             <div>
+                <h3 className="text-[16px] font-bold text-slate-800">Production Overview</h3>
+                <p className="text-[11px] text-slate-400 font-medium mt-0.5">Yield distribution by crop</p>
              </div>
+             <button className="text-slate-400 hover:text-slate-600">
+                <MoreHorizontal className="w-5 h-5" />
+             </button>
           </div>
           
-          <div className="flex-1 relative flex items-center justify-center">
-             <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie
-                    data={productionData}
-                    cx="50%"
-                    cy="100%"
-                    startAngle={180}
-                    endAngle={0}
-                    innerRadius={75}
-                    outerRadius={100}
-                    paddingAngle={6}
-                    dataKey="value"
-                    cornerRadius={8}
-                  >
-                    {productionData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
-                    ))}
-                  </Pie>
-                </PieChart>
-             </ResponsiveContainer>
-             <div className="absolute bottom-0 flex flex-col items-center mb-2">
-                <span className="text-3xl font-bold text-slate-900 tracking-tight">1,000</span>
-                <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider mt-1">tons production</span>
+          <div className="flex items-center gap-8 h-full pl-2">
+             {/* Left: Interactive Donut */}
+             <div className="relative w-40 h-40 flex-shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                   <PieChart>
+                     <Pie
+                       data={productionData}
+                       cx="50%"
+                       cy="50%"
+                       innerRadius={60}
+                       outerRadius={80}
+                       paddingAngle={5}
+                       dataKey="value"
+                       stroke="none"
+                       cornerRadius={4}
+                     >
+                       {productionData.map((entry, index) => (
+                         <Cell key={`cell-${index}`} fill={entry.color} />
+                       ))}
+                     </Pie>
+                     <Tooltip 
+                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '11px' }}
+                     />
+                   </PieChart>
+                </ResponsiveContainer>
+                {/* Center Label */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                   <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total</div>
+                   <div className="text-xl font-black text-slate-900">1.0k</div>
+                   <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">tons</div>
+                </div>
              </div>
-          </div>
 
-          <div className="flex justify-center space-x-6 mt-4">
-             {productionData.map(item => (
-               <div key={item.name} className="flex items-center">
-                 <span className="w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: item.color }}></span>
-                 <div className="flex flex-col">
-                    <span className="text-[10px] text-slate-400 font-medium uppercase">{item.name}</span>
-                    <span className="text-xs font-bold text-slate-700">{item.value}%</span>
-                 </div>
-               </div>
-             ))}
+             {/* Right: Legend & Details */}
+             <div className="flex-1 space-y-5 pr-2">
+                {productionData.map((item) => (
+                   <div key={item.name} className="group">
+                      <div className="flex justify-between items-end mb-1.5">
+                         <span className="text-xs font-semibold text-slate-700 flex items-center">
+                            <span className="w-2.5 h-2.5 rounded-full mr-2.5 shadow-sm" style={{ backgroundColor: item.color }} />
+                            {item.name}
+                         </span>
+                         <span className="text-xs font-bold text-slate-900">{item.value}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                         <div 
+                           className="h-full rounded-full transition-all duration-500 ease-out group-hover:opacity-80 relative"
+                           style={{ width: `${item.value}%`, backgroundColor: item.color }}
+                         >
+                            <div className="absolute top-0 right-0 bottom-0 w-full bg-gradient-to-l from-white/20 to-transparent"></div>
+                         </div>
+                      </div>
+                   </div>
+                ))}
+             </div>
           </div>
         </Card>
 
         {/* Stats Column */}
         <div className="lg:col-span-4 flex flex-col gap-6">
            {/* Land Area */}
-           <Card className="flex items-start justify-between flex-1">
+           <Card className="flex items-start justify-between flex-1 group hover:border-[#22C55E]/30 transition-all duration-300">
              <div className="flex flex-col justify-between h-full">
                <div className="flex items-center space-x-2">
-                 <span className="text-[13px] text-slate-500 font-medium">Total Land Area</span>
+                 <span className="text-[13px] text-slate-500 font-medium group-hover:text-[#22C55E] transition-colors">Total Land Area</span>
                  <HelpCircle className="w-3.5 h-3.5 text-slate-300" />
                </div>
                <div>
-                 <p className="text-[28px] font-bold text-slate-900 tracking-tight">1,200 <span className="text-sm font-normal text-slate-400 ml-1">acres</span></p>
+                 <p className="text-[28px] font-bold text-slate-900 tracking-tight">80 <span className="text-sm font-normal text-slate-400 ml-1">acres</span></p>
                  <div className="flex items-center mt-2">
                     <span className="bg-red-50 text-red-500 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center">
                         <ArrowDown className="w-3 h-3 mr-0.5" /> 16.08%
@@ -439,20 +457,20 @@ const Dashboard = () => {
                  </div>
                </div>
              </div>
-             <div className="w-12 h-12 rounded-full bg-[#DCFCE7] flex items-center justify-center text-[#16A34A]">
+             <div className="w-12 h-12 rounded-full bg-[#DCFCE7] flex items-center justify-center text-[#16A34A] group-hover:scale-110 transition-transform duration-300 shadow-sm">
                 <Sprout className="w-6 h-6" strokeWidth={2} />
              </div>
            </Card>
 
            {/* Revenue */}
-           <Card className="flex items-start justify-between flex-1">
+           <Card className="flex items-start justify-between flex-1 group hover:border-[#9333EA]/30 transition-all duration-300">
              <div className="flex flex-col justify-between h-full">
                <div className="flex items-center space-x-2">
-                 <span className="text-[13px] text-slate-500 font-medium">Revenue</span>
+                 <span className="text-[13px] text-slate-500 font-medium group-hover:text-[#9333EA] transition-colors">Revenue</span>
                  <HelpCircle className="w-3.5 h-3.5 text-slate-300" />
                </div>
                <div>
-                 <p className="text-[28px] font-bold text-slate-900 tracking-tight">₹42,00,000</p>
+                 <p className="text-[28px] font-bold text-slate-900 tracking-tight">₹2,00,000</p>
                  <div className="flex items-center mt-2">
                     <span className="bg-green-50 text-green-500 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center">
                         <ArrowUp className="w-3 h-3 mr-0.5" /> 12.45%
@@ -461,7 +479,7 @@ const Dashboard = () => {
                  </div>
                </div>
              </div>
-             <div className="w-12 h-12 rounded-full bg-[#F3E8FF] flex items-center justify-center text-[#9333EA]">
+             <div className="w-12 h-12 rounded-full bg-[#F3E8FF] flex items-center justify-center text-[#9333EA] group-hover:scale-110 transition-transform duration-300 shadow-sm">
                 <span className="text-xl font-bold">₹</span>
              </div>
            </Card>
@@ -536,7 +554,7 @@ const Dashboard = () => {
         {/* Field Image Card */}
         <div className="lg:col-span-5 h-full relative rounded-[24px] overflow-hidden shadow-soft group">
            <img 
-             src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=1000&auto=format&fit=crop" 
+             src="https://cdn.mos.cms.futurecdn.net/Ys52dqtT4fLt6m3rpRLdxm-1600-80.jpg" 
              alt="Corn Field" 
              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000 ease-out"
            />
@@ -563,11 +581,11 @@ const Dashboard = () => {
                    </div>
                    <div className="px-4 flex-1">
                      <p className="text-[10px] text-slate-500 font-medium mb-1">Planting Date</p>
-                     <p className="text-sm font-bold text-slate-800">01 Nov, 2025</p>
+                     <p className="text-sm font-bold text-slate-800">22 Nov, 2025</p>
                    </div>
                    <div className="pl-4 flex-1 text-right">
                      <p className="text-[10px] text-slate-500 font-medium mb-1">Harvest Time</p>
-                     <p className="text-sm font-bold text-slate-800">6 month</p>
+                     <p className="text-sm font-bold text-slate-800">3.5 month</p>
                    </div>
                  </div>
               </div>
@@ -1057,8 +1075,8 @@ const CropDoctor = () => {
 
 const ReportsAnalytics = () => {
    const overviewCards = [
-      { label: 'Total Output Value', value: '₹56.3L', change: '+12.4%', positive: true },
-      { label: 'Input Cost / Acre', value: '₹18,200', change: '-4.1%', positive: true },
+      { label: 'Total Output Value', value: '₹86.3k', change: '+12.4%', positive: true },
+      { label: 'Input Cost / Acre', value: '₹5,200', change: '-4.1%', positive: true },
       { label: 'Avg Profit Margin', value: '32%', change: '+2.7%', positive: true },
       { label: 'Carbon Savings', value: '4.8 t CO₂e', change: '+0.6 t', positive: true },
    ];
