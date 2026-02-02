@@ -92,7 +92,7 @@ export const Dashboard = () => {
   // Production Data for Gauge
   const productionData = [
     { name: 'Wheat', value: 40, color: '#A855F7' }, 
-    { name: 'Corn', value: 30, color: '#3B82F6' },  
+    { name: 'Potato', value: 30, color: '#3B82F6' },  
     { name: 'Rice', value: 20, color: '#22C55E' },  
   ];
 
@@ -300,7 +300,7 @@ export const Dashboard = () => {
             <div className="flex space-x-3">
                <div className="relative">
                  <select className="appearance-none bg-[#F8F9FC] border-none text-slate-600 text-[11px] font-medium rounded-lg pl-3 pr-8 py-1.5 outline-none cursor-pointer hover:bg-slate-100">
-                    <option>Corn</option>
+                    <option>Potato</option>
                  </select>
                  <ArrowDown className="w-3 h-3 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                </div>
@@ -370,7 +370,7 @@ export const Dashboard = () => {
               <div className="glass-panel rounded-[20px] p-5 shadow-lg border border-white/20">
                  <div className="flex justify-between items-center mb-4">
                    <div className="flex items-center">
-                     <span className="font-bold text-slate-900 text-sm">Corn Field</span>
+                     <span className="font-bold text-slate-900 text-sm">Potato Field</span>
                      <ChevronRight className="w-4 h-4 text-slate-400 ml-1" />
                    </div>
                    <button className="flex items-center text-[11px] font-medium text-slate-500 hover:text-green-600 transition-colors bg-white/50 px-2 py-1 rounded-lg">
@@ -454,7 +454,7 @@ export const Dashboard = () => {
                        <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 shadow-sm ${item.color}`}>
                          {item.name === 'Tomatoes' && <div className="w-4 h-4 bg-current rounded-full shadow-sm" />} 
                          {item.name === 'Carrots' && <Carrot className="w-5 h-5" />}
-                         {item.name === 'Corn' && <Sprout className="w-5 h-5" />}
+                         {item.name === 'Potato' && <Sprout className="w-5 h-5" />}
                        </div>
                        <span className="font-semibold text-slate-700 text-[13px]">{item.name}</span>
                     </div>

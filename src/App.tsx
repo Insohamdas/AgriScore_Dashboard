@@ -555,7 +555,7 @@ const Dashboard = () => {
         <div className="lg:col-span-5 h-full relative rounded-[24px] overflow-hidden shadow-soft group">
            <img 
              src="https://cdn.mos.cms.futurecdn.net/Ys52dqtT4fLt6m3rpRLdxm-1600-80.jpg" 
-             alt="Corn Field" 
+             alt="Potato Field" 
              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000 ease-out"
            />
            {/* Gradient Overlay */}
@@ -566,7 +566,7 @@ const Dashboard = () => {
               <div className="glass-panel rounded-[20px] p-5 shadow-lg border border-white/20">
                  <div className="flex justify-between items-center mb-4">
                    <div className="flex items-center">
-                     <span className="font-bold text-slate-900 text-sm">Corn Field</span>
+                     <span className="font-bold text-slate-900 text-sm">Potato Field</span>
                      <ChevronRight className="w-4 h-4 text-slate-400 ml-1" />
                    </div>
                    <button className="flex items-center text-[11px] font-medium text-slate-500 hover:text-green-600 transition-colors bg-white/50 px-2 py-1 rounded-lg">

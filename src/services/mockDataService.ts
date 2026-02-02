@@ -56,7 +56,7 @@ export const MOCK_FARMS: Farm[] = [
 export const MOCK_FIELDS: Field[] = [
   { field_id: 201, farm_id: 101, name: 'North Zone Wheat', crop_type: 'Wheat', planting_date: '2025-11-01', soil_type: 'Loamy' },
   { field_id: 202, farm_id: 101, name: 'River Side Rice', crop_type: 'Rice', planting_date: '2025-06-15', soil_type: 'Clay' },
-  { field_id: 203, farm_id: 102, name: 'Hilltop Corn', crop_type: 'Corn', planting_date: '2025-03-10', soil_type: 'Sandy Loam' },
+  { field_id: 203, farm_id: 102, name: 'Hilltop Potato', crop_type: 'Potato', planting_date: '2025-03-10', soil_type: 'Sandy Loam' },
 ];
 
 export const MOCK_DEVICES: Device[] = [
@@ -90,7 +90,7 @@ export const MOCK_ALERTS: Alert[] = [
   },
   { 
     alert_id: 503, sensor_id: 304, message: 'Device Offline: Node-HT-01', severity: AlertSeverity.INFO, is_resolved: false, created_at: new Date(Date.now() - 86400000).toISOString(), // Linked to device really, but using schema logic
-    farm_name: 'Sunny Hills Orchard', field_name: 'Hilltop Corn', sensor_type: 'System'
+    farm_name: 'Sunny Hills Orchard', field_name: 'Hilltop Potato', sensor_type: 'System'
   }
 ];
 
@@ -106,7 +106,7 @@ export const MOCK_TASKS: Task[] = [
 export const MOCK_HARVEST: HarvestItem[] = [
   { id: 1, name: 'Tomatoes', amount: 150, unit: 'tons', color: 'bg-red-100 text-red-600' },
   { id: 2, name: 'Carrots', amount: 120, unit: 'tons', color: 'bg-orange-100 text-orange-600' },
-  { id: 3, name: 'Corn', amount: 200, unit: 'tons', color: 'bg-yellow-100 text-yellow-600' },
+  { id: 3, name: 'Potato', amount: 200, unit: 'tons', color: 'bg-yellow-100 text-yellow-600' },
 ];
 
 // --- API Facade ---
