@@ -359,7 +359,7 @@ export const Dashboard = () => {
         <div className="lg:col-span-5 h-full relative rounded-[24px] overflow-hidden shadow-soft group">
            <img 
              src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=1000&auto=format&fit=crop" 
-             alt="Corn Field" 
+             alt="Potato Field" 
              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000 ease-out"
            />
            {/* Gradient Overlay */}
